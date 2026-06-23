@@ -1,0 +1,16 @@
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.csproj.AssemblyReference.cache
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.AssemblyInfoInputs.cache
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.AssemblyInfo.cs
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.csproj.CoreCompileInputs.cache
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.sourcelink.json
+/workspace/visualcompositor/state/bin/Debug/net8.0/VisualCompositor.State.deps.json
+/workspace/visualcompositor/state/bin/Debug/net8.0/VisualCompositor.State.dll
+/workspace/visualcompositor/state/bin/Debug/net8.0/VisualCompositor.State.pdb
+/workspace/visualcompositor/state/bin/Debug/net8.0/VisualCompositor.Core.dll
+/workspace/visualcompositor/state/bin/Debug/net8.0/VisualCompositor.Core.pdb
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCo.156FE11C.Up2Date
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.dll
+/workspace/visualcompositor/state/obj/Debug/net8.0/refint/VisualCompositor.State.dll
+/workspace/visualcompositor/state/obj/Debug/net8.0/VisualCompositor.State.pdb
+/workspace/visualcompositor/state/obj/Debug/net8.0/ref/VisualCompositor.State.dll

@@ -1,0 +1,16 @@
+/workspace/visualcompositor/rendering/bin/Debug/net8.0/VisualCompositor.Rendering.deps.json
+/workspace/visualcompositor/rendering/bin/Debug/net8.0/VisualCompositor.Rendering.dll
+/workspace/visualcompositor/rendering/bin/Debug/net8.0/VisualCompositor.Rendering.pdb
+/workspace/visualcompositor/rendering/bin/Debug/net8.0/VisualCompositor.Core.dll
+/workspace/visualcompositor/rendering/bin/Debug/net8.0/VisualCompositor.Core.pdb
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.csproj.AssemblyReference.cache
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.AssemblyInfoInputs.cache
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.AssemblyInfo.cs
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.csproj.CoreCompileInputs.cache
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.sourcelink.json
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCo.D494DFA3.Up2Date
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.dll
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/refint/VisualCompositor.Rendering.dll
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/VisualCompositor.Rendering.pdb
+/workspace/visualcompositor/rendering/obj/Debug/net8.0/ref/VisualCompositor.Rendering.dll
