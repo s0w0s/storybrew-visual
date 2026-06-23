@@ -1732,6 +1732,19 @@
           "bin/placeholder/VisualCompositor.Osb.dll": {}
         }
       },
+      "VisualCompositor.Rendering/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/VisualCompositor.Rendering.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VisualCompositor.Rendering.dll": {}
+        }
+      },
       "VisualCompositor.State/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -1743,6 +1756,22 @@
         },
         "runtime": {
           "bin/placeholder/VisualCompositor.State.dll": {}
+        }
+      },
+      "VisualCompositor.UI/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0",
+          "VisualCompositor.Osb": "1.0.0",
+          "VisualCompositor.Rendering": "1.0.0",
+          "VisualCompositor.State": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/VisualCompositor.UI.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VisualCompositor.UI.dll": {}
         }
       }
     }
@@ -5544,10 +5573,20 @@
       "path": "../../osb/VisualCompositor.Osb.csproj",
       "msbuildProject": "../../osb/VisualCompositor.Osb.csproj"
     },
+    "VisualCompositor.Rendering/1.0.0": {
+      "type": "project",
+      "path": "../../rendering/VisualCompositor.Rendering.csproj",
+      "msbuildProject": "../../rendering/VisualCompositor.Rendering.csproj"
+    },
     "VisualCompositor.State/1.0.0": {
       "type": "project",
       "path": "../../state/VisualCompositor.State.csproj",
       "msbuildProject": "../../state/VisualCompositor.State.csproj"
+    },
+    "VisualCompositor.UI/1.0.0": {
+      "type": "project",
+      "path": "../../ui/VisualCompositor.UI.csproj",
+      "msbuildProject": "../../ui/VisualCompositor.UI.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -5555,7 +5594,9 @@
       "Microsoft.NET.Test.Sdk >= 17.8.0",
       "VisualCompositor.Core >= 1.0.0",
       "VisualCompositor.Osb >= 1.0.0",
+      "VisualCompositor.Rendering >= 1.0.0",
       "VisualCompositor.State >= 1.0.0",
+      "VisualCompositor.UI >= 1.0.0",
       "coverlet.collector >= 6.0.0",
       "xunit >= 2.5.3",
       "xunit.runner.visualstudio >= 2.5.3"
@@ -5592,8 +5633,14 @@
             "/workspace/visualcompositor/osb/VisualCompositor.Osb.csproj": {
               "projectPath": "/workspace/visualcompositor/osb/VisualCompositor.Osb.csproj"
             },
+            "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj": {
+              "projectPath": "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj"
+            },
             "/workspace/visualcompositor/state/VisualCompositor.State.csproj": {
               "projectPath": "/workspace/visualcompositor/state/VisualCompositor.State.csproj"
+            },
+            "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj": {
+              "projectPath": "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj"
             }
           }
         }

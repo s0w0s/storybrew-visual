@@ -124,6 +124,68 @@
         }
       }
     },
+    "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj",
+        "projectName": "VisualCompositor.Rendering",
+        "projectPath": "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/workspace/visualcompositor/rendering/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/root/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/workspace/visualcompositor/core/VisualCompositor.Core.csproj": {
+                "projectPath": "/workspace/visualcompositor/core/VisualCompositor.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/root/.dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
     "/workspace/visualcompositor/state/VisualCompositor.State.csproj": {
       "version": "1.0.0",
       "restore": {
@@ -214,8 +276,14 @@
               "/workspace/visualcompositor/osb/VisualCompositor.Osb.csproj": {
                 "projectPath": "/workspace/visualcompositor/osb/VisualCompositor.Osb.csproj"
               },
+              "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj": {
+                "projectPath": "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj"
+              },
               "/workspace/visualcompositor/state/VisualCompositor.State.csproj": {
                 "projectPath": "/workspace/visualcompositor/state/VisualCompositor.State.csproj"
+              },
+              "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj": {
+                "projectPath": "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj"
               }
             }
           }
@@ -252,6 +320,77 @@
               "version": "[2.5.3, )"
             }
           },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/root/.dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj",
+        "projectName": "VisualCompositor.UI",
+        "projectPath": "/workspace/visualcompositor/ui/VisualCompositor.UI.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/workspace/visualcompositor/ui/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/root/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/workspace/visualcompositor/core/VisualCompositor.Core.csproj": {
+                "projectPath": "/workspace/visualcompositor/core/VisualCompositor.Core.csproj"
+              },
+              "/workspace/visualcompositor/osb/VisualCompositor.Osb.csproj": {
+                "projectPath": "/workspace/visualcompositor/osb/VisualCompositor.Osb.csproj"
+              },
+              "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj": {
+                "projectPath": "/workspace/visualcompositor/rendering/VisualCompositor.Rendering.csproj"
+              },
+              "/workspace/visualcompositor/state/VisualCompositor.State.csproj": {
+                "projectPath": "/workspace/visualcompositor/state/VisualCompositor.State.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
           "imports": [
             "net461",
             "net462",

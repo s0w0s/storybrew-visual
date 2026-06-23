@@ -14,5 +14,7 @@ public record RemoveKeyframeAction(string LayerId, string SpriteId, string Prope
 public record MoveBlockAction(string LayerId, string BlockId, int NewIndex) : EditorAction("Move Block");
 public record RemoveBlockAction(string LayerId, string BlockId) : EditorAction("Remove Block");
 public record ExpandBlockAction(string LayerId, string BlockId) : EditorAction("Expand Block");
+public record AddParameterSegmentAction(string LayerId, string SpriteId, ParameterType Parameter, double StartTime, double? EndTime, OpenEndedMode OpenEndedMode) : EditorAction("Add Parameter Segment");
+public record RemoveParameterSegmentAction(string LayerId, string SpriteId, int SegmentIndex) : EditorAction("Remove Parameter Segment");
 public record UndoAction() : EditorAction("Undo");
 public record RedoAction() : EditorAction("Redo");

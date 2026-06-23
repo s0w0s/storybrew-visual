@@ -26,6 +26,8 @@ public static class Reducer
             MoveBlockAction a => ReduceMoveBlock(state, a),
             RemoveBlockAction a => ReduceRemoveBlock(state, a),
             ExpandBlockAction a => ReduceExpandBlock(state, a),
+            AddParameterSegmentAction a => ReduceAddParameterSegment(state, a),
+            RemoveParameterSegmentAction a => ReduceRemoveParameterSegment(state, a),
             UndoAction => ReduceUndo(state),
             RedoAction => ReduceRedo(state),
             _ => state,
@@ -72,9 +74,12 @@ public static class Reducer
             if (track.ValueType != "Float") return null;
             if (a.KeyframeIndex < 0 || a.KeyframeIndex >= track.FloatKeyframes.Count) return null;
             var kf = track.FloatKeyframes[a.KeyframeIndex];
+            bool timeChanged = kf.Time != a.Time;
             kf.Time = a.Time;
             if (float.TryParse(a.ValueJson, out var val))
                 kf.Value = val;
+            if (timeChanged)
+                track.FloatKeyframes.Sort((x, y) => x.Time.CompareTo(y.Time));
             return doc;
         });
 
@@ -90,7 +95,10 @@ public static class Reducer
                 sprite.PropertyTracks.Add(track);
             }
             if (track.ValueType == "Float" && float.TryParse(a.ValueJson, out var val))
+            {
                 track.FloatKeyframes.Add(new Keyframe<float> { Time = a.Time, Value = val, Easing = a.Easing });
+                track.FloatKeyframes.Sort((x, y) => x.Time.CompareTo(y.Time));
+            }
             return doc;
         });
 
@@ -124,6 +132,20 @@ public static class Reducer
             var (block, container) = FindBlockContainer(doc, a.LayerId, a.BlockId);
             if (block == null || container == null) return null;
             container.Remove(block);
+            // Mark the block's command records as Deleted (persisted, not removed from dictionary)
+            if (doc.CommandRecords.TryGetValue(block.HeaderCommandId, out var headerRec))
+                headerRec.Lifecycle = CommandRecordLifecycle.Deleted;
+            var relativeIds = block switch
+            {
+                LoopBlock lb => lb.RelativeCommands.Select(c => c.Id),
+                TriggerBlock tb => tb.RelativeCommands.Select(c => c.Id),
+                _ => Enumerable.Empty<string>(),
+            };
+            foreach (var relId in relativeIds)
+            {
+                if (doc.CommandRecords.TryGetValue(relId, out var relRec))
+                    relRec.Lifecycle = CommandRecordLifecycle.Deleted;
+            }
             return doc;
         });
 
@@ -135,6 +157,34 @@ public static class Reducer
         if (newState == null) return state; // apply failed
         return newState;
     }
+
+    private static EditorState ReduceAddParameterSegment(EditorState state, AddParameterSegmentAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            var sprite = FindSprite(doc, a.LayerId, a.SpriteId);
+            if (sprite == null) return null;
+            sprite.ParameterTrack ??= new ParameterTrack();
+            sprite.ParameterTrack.Segments.Add(new ParameterSegment
+            {
+                Parameter = a.Parameter,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                OpenEndedMode = a.OpenEndedMode,
+            });
+            return doc;
+        });
+
+    private static EditorState ReduceRemoveParameterSegment(EditorState state, RemoveParameterSegmentAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            var sprite = FindSprite(doc, a.LayerId, a.SpriteId);
+            if (sprite == null) return null;
+            var track = sprite.ParameterTrack;
+            if (track == null) return null;
+            if (a.SegmentIndex < 0 || a.SegmentIndex >= track.Segments.Count) return null;
+            track.Segments.RemoveAt(a.SegmentIndex);
+            return doc;
+        });
 
     // ---- Undo / Redo ----
 

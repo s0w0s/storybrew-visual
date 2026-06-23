@@ -1,140 +1,165 @@
 using System.Threading.Channels;
 using VisualCompositor.Core.Model;
 using VisualCompositor.Core.Primitives;
-using VisualCompositor.Rendering.Backend;
+using VisualCompositor.Rendering.Abstractions;
 using VisualCompositor.Rendering.Sampling;
 
 namespace VisualCompositor.Rendering.Worker;
 
-/// <summary>Async render worker. Consumes RenderRequests and produces RenderResults.
-/// UI only accepts results where result.Revision == state.Revision.
-/// During scrub, old requests are discarded and expired requests are cancelled.</summary>
+/// <summary>Async render worker. Consumes RenderRequest, produces RenderResult.
+/// UI only accepts results where result.Revision == state.Revision.</summary>
 public sealed class RenderWorker : IDisposable
 {
-    private readonly IRenderBackend _backend;
-    private readonly Channel<RenderRequest> _requestChannel;
-    private readonly CancellationTokenSource _disposeCts = new();
-    private Task? _workerTask;
+    private readonly Channel<RenderRequest> _channel;
+    private readonly IRenderer? _renderer;
+    private readonly ITextureProvider? _textureProvider;
+    private readonly Task _processTask;
+    private CancellationTokenSource _cts = new();
+    private readonly object _lock = new();
 
-    public RenderWorker(IRenderBackend backend)
+    public int MaxRenderedLayers { get; set; } = 50;
+
+    public RenderWorker(IRenderer? renderer = null, ITextureProvider? textureProvider = null)
     {
-        _backend = backend;
-        _requestChannel = Channel.CreateBounded<RenderRequest>(new BoundedChannelOptions(1)
+        _renderer = renderer;
+        _textureProvider = textureProvider;
+        _channel = Channel.CreateUnbounded<RenderRequest>(new UnboundedChannelOptions
         {
-            FullMode = BoundedChannelFullMode.DropOldest,
             SingleReader = true,
             SingleWriter = false,
         });
+        _processTask = Task.Run(ProcessLoop);
     }
 
-    public void Start()
+    /// <summary>Submit a render request. Discards any pending request (only latest matters during scrub).</summary>
+    public void Submit(RenderRequest request)
     {
-        _workerTask = Task.Run(ProcessLoop);
+        // Cancel any in-flight request
+        lock (_lock)
+        {
+            _cts.Cancel();
+            _cts = new CancellationTokenSource();
+        }
+
+        // Drain the channel (discard stale requests)
+        while (_channel.Reader.TryRead(out _)) { }
+
+        _channel.Writer.TryWrite(request);
     }
 
-    /// <summary>Submit a render request. If a previous request is still pending, it is discarded.</summary>
-    public async Task SubmitAsync(RenderRequest request)
-    {
-        await _requestChannel.Writer.WriteAsync(request, _disposeCts.Token);
-    }
-
-    /// <summary>Try to get the latest result. Returns null if no result is ready.</summary>
-    public RenderResult? TryGetResult(long expectedRevision)
-    {
-        // Results are delivered via callback/event, not polling
-        // This is a simplified synchronous check
-        return null;
-    }
-
-    /// <summary>Event raised when a render result is ready. UI checks result.Revision == state.Revision.</summary>
-    public event Action<RenderResult>? ResultReady;
+    /// <summary>Event raised when a render result is available. UI checks result.Revision == state.Revision.</summary>
+    public event Action<RenderResult>? ResultAvailable;
 
     private async Task ProcessLoop()
     {
-        await foreach (var request in _requestChannel.Reader.ReadAllAsync(_disposeCts.Token))
+        await foreach (var request in _channel.Reader.ReadAllAsync())
         {
             if (request.CancellationToken.IsCancellationRequested)
                 continue;
 
             try
             {
-                var result = await RenderAsync(request);
-                ResultReady?.Invoke(result);
+                var result = await Task.Run(() => Render(request), request.CancellationToken);
+                ResultAvailable?.Invoke(result);
             }
             catch (OperationCanceledException)
             {
-                // Request was cancelled during scrub
+                // Request was cancelled (superseded by a newer one)
             }
             catch (Exception ex)
             {
-                ResultReady?.Invoke(new RenderResult
+                ResultAvailable?.Invoke(new RenderResult
                 {
                     Revision = request.Revision,
                     Time = request.Time,
-                    Diagnostics = new List<RenderDiagnostic>
-                    {
-                        new() { Code = "RENDER_ERROR", Message = ex.Message },
-                    },
+                    Succeeded = false,
+                    ErrorMessage = ex.Message,
                 });
             }
         }
     }
 
-    private async Task<RenderResult> RenderAsync(RenderRequest request)
+    private RenderResult Render(RenderRequest request)
     {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        var resolutionScale = GetResolutionScale(request.Quality);
-        _backend.BeginFrame(resolutionScale);
+        var selector = new SelectedAndContextSelector(MaxRenderedLayers);
+        var spritesToRender = selector.Select(request.Document, request.SelectedLayerIds, request.SelectedSpriteIds, request.Time);
 
-        var spritesToRender = LayerSelector.SelectSpritesForRendering(
-            request.Document, request.SelectedSpriteIds, request.MaxRenderedLayers);
-
-        foreach (var sprite in spritesToRender)
-        {
-            if (request.CancellationToken.IsCancellationRequested)
-            {
-                request.CancellationToken.ThrowIfCancellationRequested();
-            }
-
-            var transform = SpriteSampler.SampleAtTime(sprite, request.Time);
-            var texture = await _backend.LoadTextureAsync(sprite.TexturePath);
-
-            _backend.DrawQuad(
-                texture,
-                transform.Position,
-                transform.Scale,
-                transform.Rotation,
-                transform.Opacity,
-                transform.Color,
-                transform.Additive);
-        }
-
-        var frame = _backend.EndFrame();
-        sw.Stop();
-
-        return new RenderResult
+        var sampler = new CommandSampler();
+        var result = new RenderResult
         {
             Revision = request.Revision,
             Time = request.Time,
-            Frame = frame,
-            RenderTime = sw.Elapsed,
+            Succeeded = true,
+        };
+
+        foreach (var spriteRef in spritesToRender)
+        {
+            var sprite = spriteRef.Sprite;
+            var state = sampler.SampleSpriteState(sprite, request.Time);
+
+            // Check if texture exists
+            bool hasTexture = _textureProvider?.HasTexture(sprite.TexturePath) ?? true;
+            if (!hasTexture)
+            {
+                result.Placeholders.Add(new RenderedPlaceholder
+                {
+                    Position = state.Position,
+                    Size = new Vector2(100, 100), // default placeholder size
+                    Label = sprite.TexturePath,
+                });
+            }
+            else
+            {
+                result.Sprites.Add(new RenderedSprite
+                {
+                    TexturePath = sprite.TexturePath,
+                    Position = state.Position,
+                    Scale = state.Scale,
+                    Rotation = state.Rotation,
+                    Opacity = state.Opacity,
+                    Color = state.Color,
+                    Additive = state.Additive,
+                    FlipH = state.FlipH,
+                    FlipV = state.FlipV,
+                });
+            }
+        }
+
+        // If we have a concrete renderer, draw to it
+        if (_renderer != null)
+        {
+            var (w, h) = GetResolution(request);
+            _renderer.BeginFrame(w, h);
+            foreach (var sprite in result.Sprites)
+            {
+                _renderer.DrawSprite(sprite.TexturePath, sprite.Position, sprite.Scale, sprite.Rotation, sprite.Opacity, sprite.Color, sprite.Additive, sprite.FlipH, sprite.FlipV);
+            }
+            foreach (var placeholder in result.Placeholders)
+            {
+                _renderer.DrawPlaceholder(placeholder.Position, placeholder.Size, placeholder.Label);
+            }
+            _renderer.EndFrame();
+        }
+
+        return result;
+    }
+
+    private static (int width, int height) GetResolution(RenderRequest request)
+    {
+        return request.Quality switch
+        {
+            RenderQuality.FullPreview => (request.Width, request.Height),
+            RenderQuality.InteractiveScrub => (request.Width / 2, request.Height / 2),
+            RenderQuality.FastScrub => (request.Width / 4, request.Height / 4),
+            RenderQuality.TimelineThumbnail => (request.Width / 8, request.Height / 8),
+            _ => (request.Width, request.Height),
         };
     }
 
-    private static float GetResolutionScale(RenderQuality quality) => quality switch
-    {
-        RenderQuality.FullPreview => 1.0f,
-        RenderQuality.InteractiveScrub => 0.5f,
-        RenderQuality.FastScrub => 0.25f,
-        RenderQuality.TimelineThumbnail => 0.125f,
-        _ => 1.0f,
-    };
-
     public void Dispose()
     {
-        _disposeCts.Cancel();
-        _requestChannel.Writer.TryComplete();
-        _workerTask?.Wait(TimeSpan.FromSeconds(5));
-        _disposeCts.Dispose();
+        _channel.Writer.Complete();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

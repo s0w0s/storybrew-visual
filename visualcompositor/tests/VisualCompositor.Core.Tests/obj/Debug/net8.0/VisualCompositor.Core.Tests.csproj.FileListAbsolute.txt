@@ -104,3 +104,7 @@
 /workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.Osb.pdb
 /workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.State.dll
 /workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.State.pdb
+/workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.Rendering.dll
+/workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.Rendering.pdb
+/workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.UI.dll
+/workspace/visualcompositor/tests/VisualCompositor.Core.Tests/bin/Debug/net8.0/VisualCompositor.UI.pdb

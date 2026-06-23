@@ -131,52 +131,52 @@
 
 ## Phase 4: Render Worker / 静态预览
 
-- [ ] Task 20: 创建 VisualCompositor.Rendering 项目
-  - [ ] SubTask 20.1: `visualcompositor/rendering/VisualCompositor.Rendering.csproj`（引用 Core + brewlib）
-  - [ ] SubTask 20.2: 添加到 `storybrew.sln`
-- [ ] Task 21: 实现异步 Render Worker（设计文档 §8）
-  - [ ] SubTask 21.1: `RenderRequest`/`RenderResult`（含 `Revision`）
-  - [ ] SubTask 21.2: `RenderWorker`：异步消费 request，UI 只接受 `result.Revision == state.Revision`
-  - [ ] SubTask 21.3: 质量预设（FullPreview/InteractiveScrub/FastScrub/TimelineThumbnail）
-  - [ ] SubTask 21.4: scrub 时降分辨率/丢弃旧 request/取消过期 request
-  - [ ] SubTask 21.5: `SelectedAndContext` 图层选择规则（selected + 相邻可见 + 背景 + fullscreen quads + missing placeholders，受 `MaxRenderedLayers` 限制）
-- [ ] Task 22: 实现静态预览渲染
-  - [ ] SubTask 22.1: 复用 brewlib `QuadRendererBuffered`/`TextureContainer` 渲染 sprite
-  - [ ] SubTask 22.2: 缺失素材 placeholder 渲染
-  - [ ] SubTask 22.3: 命令采样（Position/Scale/Rotation/Opacity/Color/Parameter at time）
+- [x] Task 20: 创建 VisualCompositor.Rendering 项目
+  - [x] SubTask 20.1: `visualcompositor/rendering/VisualCompositor.Rendering.csproj`（引用 Core + brewlib）
+  - [x] SubTask 20.2: 添加到 `storybrew.sln`
+- [x] Task 21: 实现异步 Render Worker（设计文档 §8）
+  - [x] SubTask 21.1: `RenderRequest`/`RenderResult`（含 `Revision`）
+  - [x] SubTask 21.2: `RenderWorker`：异步消费 request，UI 只接受 `result.Revision == state.Revision`
+  - [x] SubTask 21.3: 质量预设（FullPreview/InteractiveScrub/FastScrub/TimelineThumbnail）
+  - [x] SubTask 21.4: scrub 时降分辨率/丢弃旧 request/取消过期 request
+  - [x] SubTask 21.5: `SelectedAndContext` 图层选择规则（selected + 相邻可见 + 背景 + fullscreen quads + missing placeholders，受 `MaxRenderedLayers` 限制）
+- [x] Task 22: 实现静态预览渲染
+  - [x] SubTask 22.1: 复用 brewlib `QuadRendererBuffered`/`TextureContainer` 渲染 sprite
+  - [x] SubTask 22.2: 缺失素材 placeholder 渲染
+  - [x] SubTask 22.3: 命令采样（Position/Scale/Rotation/Opacity/Color/Parameter at time）
 
 ## Phase 5: UI MVP
 
-- [ ] Task 23: 创建 VisualCompositor.UI 项目
-  - [ ] SubTask 23.1: `visualcompositor/ui/VisualCompositor.UI.csproj`（引用 State + Rendering + brewlib）
-  - [ ] SubTask 23.2: 添加到 `storybrew.sln`
-- [ ] Task 24: 实现 UI MVP 骨架
-  - [ ] SubTask 24.1: 主窗口 + ScreenLayer 接入（复用 brewlib `ScreenLayerManager`）
-  - [ ] SubTask 24.2: 时间轴 scrub UI（复用 brewlib `Slider`/`Widget`）
-  - [ ] SubTask 24.3: 图层列表 UI
-  - [ ] SubTask 24.4: 预览画布（接入 Render Worker）
-  - [ ] SubTask 24.5: Diagnostics 面板
-  - [ ] SubTask 24.6: 打开 `.osb` / 保存 `.storybrewcomp` / 导出 `.osb` 菜单
+- [x] Task 23: 创建 VisualCompositor.UI 项目
+  - [x] SubTask 23.1: `visualcompositor/ui/VisualCompositor.UI.csproj`（引用 State + Rendering + brewlib）
+  - [x] SubTask 23.2: 添加到 `storybrew.sln`
+- [x] Task 24: 实现 UI MVP 骨架
+  - [x] SubTask 24.1: 主窗口 + ScreenLayer 接入（复用 brewlib `ScreenLayerManager`）
+  - [x] SubTask 24.2: 时间轴 scrub UI（复用 brewlib `Slider`/`Widget`）
+  - [x] SubTask 24.3: 图层列表 UI
+  - [x] SubTask 24.4: 预览画布（接入 Render Worker）
+  - [x] SubTask 24.5: Diagnostics 面板
+  - [x] SubTask 24.6: 打开 `.osb` / 保存 `.storybrewcomp` / 导出 `.osb` 菜单
 
 ## Phase 6: Keyframe 编辑 + Undo/Redo
 
-- [ ] Task 25: 实现 Transform keyframe 编辑
-  - [ ] SubTask 25.1: keyframe 添加/删除/移动（Position/Scale/Rotation/Opacity/Color）
-  - [ ] SubTask 25.2: keyframe 编辑经 Reducer 产生 undo/redo transaction
-  - [ ] SubTask 25.3: ParameterTrack segment 编辑
-- [ ] Task 26: 实现 Block 编辑
-  - [ ] SubTask 26.1: Block 移动/删除（经 Reducer）
-  - [ ] SubTask 26.2: Expand To Keyframes 操作（触发 `ExpandBlockTransaction`）
+- [x] Task 25: 实现 Transform keyframe 编辑
+  - [x] SubTask 25.1: keyframe 添加/删除/移动（Position/Scale/Rotation/Opacity/Color）
+  - [x] SubTask 25.2: keyframe 编辑经 Reducer 产生 undo/redo transaction
+  - [x] SubTask 25.3: ParameterTrack segment 编辑
+- [x] Task 26: 实现 Block 编辑
+  - [x] SubTask 26.1: Block 移动/删除（经 Reducer）
+  - [x] SubTask 26.2: Expand To Keyframes 操作（触发 `ExpandBlockTransaction`）
 
 ## Phase 7: Export Compiler
 
-- [ ] Task 27: 实现 .osb export compiler（设计文档 §7）
-  - [ ] SubTask 27.1: Position X/Y 对齐检测 → `M` 或 `MX+MY`
-  - [ ] SubTask 27.2: Scale X/Y 全程相等检测 → `S` 或 `V`
-  - [ ] SubTask 27.3: Loop/Trigger 内部命令由各自 exporter 处理
-  - [ ] SubTask 27.4: RawBlock 按 anchor 插回（rebase → scope 末尾 → orphan warning）
-  - [ ] SubTask 27.5: Bezier 导出模式（WarnOnly/FitNearestOsuEasing/BakeToSegments）
-  - [ ] SubTask 27.6: 导出前 `pre-osb-export` validation
+- [x] Task 27: 实现 .osb export compiler（设计文档 §7）
+  - [x] SubTask 27.1: Position X/Y 对齐检测 → `M` 或 `MX+MY`
+  - [x] SubTask 27.2: Scale X/Y 全程相等检测 → `S` 或 `V`
+  - [x] SubTask 27.3: Loop/Trigger 内部命令由各自 exporter 处理
+  - [x] SubTask 27.4: RawBlock 按 anchor 插回（rebase → scope 末尾 → orphan warning）
+  - [x] SubTask 27.5: Bezier 导出模式（WarnOnly/FitNearestOsuEasing/BakeToSegments）
+  - [x] SubTask 27.6: 导出前 `pre-osb-export` validation
 - [ ] Task 28: Phase 7 单元测试
   - [ ] SubTask 28.1: 导入后导出往返保真测试
   - [ ] SubTask 28.2: M/MX+MY 优化测试

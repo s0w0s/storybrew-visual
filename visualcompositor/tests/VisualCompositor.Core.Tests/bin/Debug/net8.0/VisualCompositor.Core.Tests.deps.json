@@ -11,7 +11,9 @@
           "Microsoft.NET.Test.Sdk": "17.8.0",
           "VisualCompositor.Core": "1.0.0",
           "VisualCompositor.Osb": "1.0.0",
+          "VisualCompositor.Rendering": "1.0.0",
           "VisualCompositor.State": "1.0.0",
+          "VisualCompositor.UI": "1.0.0",
           "coverlet.collector": "6.0.0",
           "xunit": "2.5.3",
           "xunit.runner.visualstudio": "2.5.3"
@@ -1042,12 +1044,37 @@
           }
         }
       },
+      "VisualCompositor.Rendering/1.0.0": {
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0"
+        },
+        "runtime": {
+          "VisualCompositor.Rendering.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "VisualCompositor.State/1.0.0": {
         "dependencies": {
           "VisualCompositor.Core": "1.0.0"
         },
         "runtime": {
           "VisualCompositor.State.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "VisualCompositor.UI/1.0.0": {
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0",
+          "VisualCompositor.Osb": "1.0.0",
+          "VisualCompositor.Rendering": "1.0.0",
+          "VisualCompositor.State": "1.0.0"
+        },
+        "runtime": {
+          "VisualCompositor.UI.dll": {
             "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -1694,7 +1721,17 @@
       "serviceable": false,
       "sha512": ""
     },
+    "VisualCompositor.Rendering/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
     "VisualCompositor.State/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VisualCompositor.UI/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

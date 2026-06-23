@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VisualCompositor.Rendering")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b151da1929cebe033357805d346dad0b7712bfb5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a3b0086e21b1c1051d157dd8ed83c7125c526801")]
 [assembly: System.Reflection.AssemblyProductAttribute("VisualCompositor.Rendering")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VisualCompositor.Rendering")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\osb\VisualCompositor.Osb.csproj" />
     <ProjectReference Include="..\..\state\VisualCompositor.State.csproj" />
     <ProjectReference Include="..\..\rendering\VisualCompositor.Rendering.csproj" />
+    <ProjectReference Include="..\..\ui\VisualCompositor.UI.csproj" />
   </ItemGroup>
 
 </Project>
