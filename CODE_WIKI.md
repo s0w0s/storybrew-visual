@@ -456,16 +456,287 @@ MSTest（`MSTest.TestAdapter` 3.1.1 + `TestFramework` 3.1.1）+ `Microsoft.NET.T
 
 ### 4.5 `brewlib` — 底层框架（子模块）
 
-`brewlib` 是 git 子模块（`https://github.com/Damnae/brewlib.git`），提供 storybrew 之下的底层能力。本仓库未检出其源码，但从引用方代码可推断其职责：
+`brewlib` 是 git 子模块（`https://github.com/Damnae/brewlib.git`，提交 `138c71119bbc82516aee69acfd1e99942a60fc0f`），命名空间 `BrewLib`，输出 `BrewLib.dll`。基于 **ManagedBass 1.0.2** + **ManagedBass.Fx 1.0.2**（音频）、**OpenTK 2.0.0**（OpenGL 窗口/输入）、**Damnae.Tiny 1.2.0**（YAML）、**System.Management 8.0.0**。打包 `bass.dll`/`bass_fx.dll`（x86，故 editor 为 x86）。SDK 为 `Microsoft.NET.Sdk.WindowsDesktop` + `UseWindowsForms`。
 
-- `BrewLib.Graphics`：OpenGL 抽象（`DrawContext`/`DrawState`/`Camera`/`CameraOrtho`/`QuadRenderer`/`LineRenderer`/`TextureContainerAtlas`/`TextureContainerSeparate`/`Drawable`）
-- `BrewLib.Audio`：`AudioManager`/`AudioStream`/`AudioSampleContainer`/`FftStream`（基于 BASS，故 editor 为 x86）
-- `BrewLib.UserInterface`：`Widget`/`WidgetManager`/`Field`/`Slider`/`Textbox`/`Button`/`Label`/`Skin`/皮肤样式
-- `BrewLib.ScreenLayers`：`ScreenLayer`/`ScreenLayerManager`
-- `BrewLib.Util`：`Misc.WithRetries`/`SafeWriteStream`/`SafeDirectoryWriter`/`FrameClock`/`TimeSourceExtender`
-- `BrewLib.Graphics.Drawables`：`Drawable` 基类等
+提供 storybrew 之下的全部底层能力：OpenGL 渲染、音频、输入、屏幕层、UI widget、皮肤、时间源、资源容器与大量工具。被 `common`、`editor`、`test` 引用。
 
-> 如需构建本仓库，须先执行 `git submodule update --init brewlib`。
+#### 4.5.1 `Audio/` — 音频引擎（BASS 封装）
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [AudioManager.cs](file:///workspace/brewlib/Audio/AudioManager.cs) | `AudioManager` | 初始化 BASS（`Bass.Init`），全局 `Volume`；`LoadStream(filename)`/`LoadSample(filename)`/`CreateStream(...)`；`Update()` 回收结束的临时 channel |
+| [AudioChannel.cs](file:///workspace/brewlib/Audio/AudioChannel.cs) | `AudioChannel` | BASS channel 句柄包装。`Time`/`Duration`/`Playing`/`Loop`/`Volume`/`TimeFactor`/`Pitch`/`Pan`/`GetFft(...)`；音量用 `SoundUtil.FromLinearVolume`（x^4 感知曲线） |
+| [AudioChannelTimeSource.cs](file:///workspace/brewlib/Audio/AudioChannelTimeSource.cs) | `AudioChannelTimeSource` | 把 `AudioChannel` 适配为 `TimeSource`，用于音频同步计时 |
+| [AudioSample.cs](file:///workspace/brewlib/Audio/AudioSample.cs) | `AudioSample` | BASS sample（`MaxSimultaneousPlayBacks=8`）；`Play()` 返回临时 `AudioChannel` |
+| [AudioSampleContainer.cs](file:///workspace/brewlib/Audio/AudioSampleContainer.cs) | `AudioSampleContainer` | 按文件名缓存 `AudioSample` |
+| [AudioStream.cs](file:///workspace/brewlib/Audio/AudioStream.cs) | `AudioStream` | 经 `BassFx.TempoCreate` 的可调速流（quick tempo 算法） |
+| [AudioStreamPull.cs](file:///workspace/brewlib/Audio/AudioStreamPull.cs) | `AudioStreamPull` | 拉模式流，消费者提供 `CallbackDelegate(IntPtr buffer, int sampleCount)` |
+| [AudioStreamPush.cs](file:///workspace/brewlib/Audio/AudioStreamPush.cs) | `AudioStreamPush` | 推模式流，消费者调 `PushData(short[], int)` |
+| [FftStream.cs](file:///workspace/brewlib/Audio/FftStream.cs) | `FftStream` | 仅解码流，支持任意时刻 FFT：`GetFft(double time, bool splitChannels)` |
+| [SoundUtil.cs](file:///workspace/brewlib/Audio/SoundUtil.cs) | `SoundUtil` (static) | `FromLinearVolume`（x^4）、`GetNoteFrequency`、波形生成 `Square`/`Saw`/`Sine`/`Triangle` |
+
+**storybrew 用法**：编辑器音频播放引擎与 storyboard 音频同步（`AudioChannelTimeSource` 驱动 `TimeSourceExtender`）；`FftStream` 支撑频谱脚本；`AudioSampleContainer` 缓存音效。
+
+#### 4.5.2 `Data/` — 资源容器
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [ResourceContainer.cs](file:///workspace/brewlib/Data/ResourceContainer.cs) | `ResourceContainer` (interface) | `ResourceNames`/`GetStream`/`GetBytes`/`GetString`/`GetWriteStream`；`ResourceSource` 标志枚举（`Embedded`/`Relative`/`Absolute`，组合 `Local`/`Any`） |
+| [AssemblyResourceContainer.cs](file:///workspace/brewlib/Data/AssemblyResourceContainer.cs) | `AssemblyResourceContainer` | 从清单资源（`baseNamespace.path`）或文件系统（`basePath`）加载；剥离 UTF-8 BOM |
+| [SubResourceContainer.cs](file:///workspace/brewlib/Data/SubResourceContainer.cs) | `SubResourceContainer` | 包装另一容器加路径前缀，回退到无前缀名 |
+
+**storybrew 用法**：`Editor.Initialize` 用 `AssemblyResourceContainer` 透明加载嵌入的 shader/字体/默认皮肤/项目资源。
+
+#### 4.5.3 `Graphics/` 顶层 — 渲染骨干
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [DrawContext.cs](file:///workspace/brewlib/Graphics/DrawContext.cs) | `DrawContext` | 轻量 DI 容器：`Get<T>()`/`Register<T>(obj, dispose)` 注册渲染器与共享服务 |
+| [DrawState.cs](file:///workspace/brewlib/Graphics/DrawState.cs) | `DrawState` (static) | OpenGL 状态管理中枢。`Initialize`/`Cleanup`/`CompleteFrame`；`Renderer` 属性自动 flush；纹理绑定（`BindPrimaryTexture`/`BindTexture`/`BindTextures` + sampler 回收）；`Viewport`/`ClipRegion` + `Clip()` IDisposable；能力缓存（`HasCapabilities`/`HasExtensions`/`CheckError`）；单例 `WhitePixel`/`NormalPixel`/`TextGenerator`/`TextFontManager` |
+| [GpuCommandSync.cs](file:///workspace/brewlib/Graphics/GpuCommandSync.cs) | `GpuCommandSync` | 基于 fence 的 GPU 同步：`LockRange`/`WaitForRange`/`WaitForAll`（`GL.FenceSync`/`ClientWaitSync`） |
+| [RenderStates.cs](file:///workspace/brewlib/Graphics/RenderStates.cs) | `RenderState`/`RenderStates` | 复合渲染状态（BlendingFactor/BlendingEquation/Depth/CullFace/PointSprite）；`BlendingMode` 枚举：`Off`/`Alphablend`/`Color`/`Additive`/`BlendAdd`/`Premultiply`/`Premultiplied` |
+| [Shader.cs](file:///workspace/brewlib/Graphics/Shader.cs) | `Shader` | 编译 vs+fs 并链接程序；`Begin`/`End`；`GetAttributeLocation`/`TryGetUniformLocation`/`HasUniform`；`SortId` 用于批合并 |
+| [VertexAttribute.cs](file:///workspace/brewlib/Graphics/VertexAttribute.cs) | `VertexAttribute` | 顶点属性定义（`Name`/`Type`/`ComponentSize`/`ComponentCount`/`Normalized`/`Offset`/`Usage`）；工厂 `CreatePosition2d/3d`/`CreateNormal`/`CreateColor` 等；`AttributeUsage` 枚举 |
+| [VertexDeclaration.cs](file:///workspace/brewlib/Graphics/VertexDeclaration.cs) | `VertexDeclaration` | `IEnumerable<VertexAttribute>` + `VertexSize`；`ActivateAttributes`/`DeactivateAttributes(Shader)` |
+
+#### 4.5.4 `Graphics/Cameras/` — 相机
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Camera.cs](file:///workspace/brewlib/Graphics/Cameras/Camera.cs) | `Camera` (interface) | 输入：`Viewport`/`Position`/`Forward`/`Up`/`NearPlane`/`FarPlane`；输出：`Projection`/`View`/`ProjectionView`/`InvertedProjectionView`/`InternalViewport`/`ExtendedViewport`；`FromScreen`/`ToScreen`；`Changed` 事件 |
+| [CameraBase.cs](file:///workspace/brewlib/Graphics/Cameras/CameraBase.cs) | `CameraBase` (abstract) | 懒 `Validate()`/`Invalidate()`；`FromScreen`/`ToScreen`；`LookAt`/`Rotate`；订阅 `DrawState.ViewportChanged` |
+| [CameraOrtho.cs](file:///workspace/brewlib/Graphics/Cameras/CameraOrtho.cs) | `CameraOrtho` | 正交相机，`VirtualWidth`/`VirtualHeight`/`Zoom`/`HeightScaling`/`yDown`。**storybrew storyboard 画布默认相机**（640×480 虚拟空间） |
+| [CameraPerspective.cs](file:///workspace/brewlib/Graphics/Cameras/CameraPerspective.cs) | `CameraPerspective` | 透视相机，`FieldOfView`（默认 67）/`NearPlaneHeight` |
+| [CameraIso.cs](file:///workspace/brewlib/Graphics/Cameras/CameraIso.cs) | `CameraIso` | 等距相机，`Target` + sqrt(1/3) forward |
+| [CameraExtensions.cs](file:///workspace/brewlib/Graphics/Cameras/CameraExtensions.cs) | static ext | `ToCamera` 在相机间转换 `Vector2`/`Vector3`/`Box2` |
+
+**storybrew 用法**：`CameraOrtho` 是 storyboard 画布默认 2D 相机；`FromScreen`/`ToScreen` 支撑编辑器鼠标到画布坐标转换。
+
+#### 4.5.5 `Graphics/Drawables/` — 可绘制对象
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Drawable.cs](file:///workspace/brewlib/Graphics/Drawables/Drawable.cs) | `Drawable` (interface) | `MinSize`/`PreferredSize`/`Draw(DrawContext, Camera, Box2, float opacity)` |
+| [CompositeDrawable.cs](file:///workspace/brewlib/Graphics/Drawables/CompositeDrawable.cs) | `CompositeDrawable` | 持有 `Drawable` 列表，绘制全部子项 |
+| [NullDrawable.cs](file:///workspace/brewlib/Graphics/Drawables/NullDrawable.cs) | `NullDrawable` | 单例空操作 drawable |
+| [Sprite.cs](file:///workspace/brewlib/Graphics/Drawables/Sprite.cs) | `Sprite` | `Texture2dRegion` + `Rotation`/`Color`/`ScaleMode`（`None`/`Fill`/`Fit`/`Repeat`/`RepeatFit`），处理 repeat 平铺 |
+| [TextDrawable.cs](file:///workspace/brewlib/Graphics/Drawables/TextDrawable.cs) | `TextDrawable` | 基于 `TextLayout` 的文本；`FontName`/`FontSize`/`MaxSize`/`Scaling`/`Alignment`/`Trimming`；导航 `GetCharacterBounds`/`GetCharacterIndexAt`/`Above`/`Below` |
+| [NinePatch.cs](file:///workspace/brewlib/Graphics/Drawables/NinePatch.cs) | `NinePatch` | 九宫格缩放，`Borders`/`Outset`/`BordersOnly`；经 `QuadRenderer` 绘制中心/边/角 |
+
+**storybrew 用法**：`Sprite`/`TextDrawable` 是屏幕对象图标、预览缩略图、widget 前景的构建块；`NinePatch` 用于皮肤化按钮/面板背景。`editor` 的 [StoryboardDrawable.cs](file:///workspace/editor/UserInterface/Drawables/StoryboardDrawable.cs) 即实现 `Drawable`。
+
+#### 4.5.6 `Graphics/RenderTargets/` — 帧缓冲对象
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [RenderTarget.cs](file:///workspace/brewlib/Graphics/RenderTargets/RenderTarget.cs) | `RenderTarget` | FBO + 纹理 + 可选 renderbuffer；`Begin(clear)`/`End`；保存/恢复 viewport+framebuffer |
+| [MultiRenderTarget.cs](file:///workspace/brewlib/Graphics/RenderTargets/MultiRenderTarget.cs) | `MultiRenderTarget` | 多 `RenderTexture` 颜色附件 + 可选 depth/stencil；`GL.DrawBuffers` MRT |
+| [RenderTexture.cs](file:///workspace/brewlib/Graphics/RenderTargets/RenderTexture.cs) | `RenderTexture` | 独立纹理 + `RenderbufferStorage`；`Resize` 触发 `OnChanged` |
+
+**storybrew 用法**：离屏合成（如把 storyboard 渲染到纹理做预览缩略图、后处理）。
+
+#### 4.5.7 `Graphics/Renderers/` — 图元渲染器
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Renderer.cs](file:///workspace/brewlib/Graphics/Renderers/Renderer.cs) | `Renderer` (interface) | `Camera`/`BeginRendering`/`EndRendering`/`Flush(canBuffer)` |
+| [QuadRenderer.cs](file:///workspace/brewlib/Graphics/Renderers/QuadRenderer.cs) | `QuadRenderer` (interface) | 扩展 `Renderer`：`Shader`/`TransformMatrix`/stats/`Draw(ref QuadPrimitive, Texture2dRegion)` |
+| [QuadRendererBuffered.cs](file:///workspace/brewlib/Graphics/Renderers/QuadRendererBuffered.cs) | `QuadRendererBuffered` | 默认实现；`ShaderBuilder` 生成默认 shader（`u_combinedMatrix mat4`/`u_texture sampler2D`）；批合并最多 `maxQuadsPerBatch=4096`；`CustomTextureBinder`/`FlushAction` |
+| [QuadPrimitive.cs](file:///workspace/brewlib/Graphics/Renderers/QuadPrimitive.cs) | `QuadPrimitive` (struct) | 4 顶点（x, y, u, v, color） |
+| [LineRenderer.cs](file:///workspace/brewlib/Graphics/Renderers/LineRenderer.cs) / [LineRendererBuffered.cs](file:///workspace/brewlib/Graphics/Renderers/LineRendererBuffered.cs) | `LineRenderer`/`LineRendererBuffered` | 同模式，`LinePrimitive`（x, y, z, color ×2） |
+| [SpriteRenderer.cs](file:///workspace/brewlib/Graphics/Renderers/SpriteRenderer.cs) / [SpriteRendererBuffered.cs](file:///workspace/brewlib/Graphics/Renderers/SpriteRendererBuffered.cs) | `SpriteRenderer`/`SpriteRendererBuffered` | 高层 sprite API（旋转/缩放/origin/纹理坐标）；`SpritePrimitive` |
+| [QuadRendererExtensions.cs](file:///workspace/brewlib/Graphics/Renderers/QuadRendererExtensions.cs) | static ext | `Draw` 重载 + `DrawArc`（圆形） |
+
+##### `Graphics/Renderers/PrimitiveStreamers/` — 顶点流策略
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [PrimitiveStreamer.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamer.cs) | `PrimitiveStreamer<T>` (interface) | `Bind`/`Unbind`/`Render(primitiveType, primitives, count, drawCount, canBuffer)`；`CreatePrimitiveStreamerDelegate<T>` |
+| [PrimitiveStreamerUtil.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamerUtil.cs) | static | 默认工厂，按能力选 `PersistentMap` > `BufferData` > `Vbo` |
+| [PrimitiveStreamerVao.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamerVao.cs) | `PrimitiveStreamerVao<T>` (abstract) | VAO + VBO + 可选 IBO；按 shader `setupVertexArray` |
+| [PrimitiveStreamerVbo.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamerVbo.cs) | `PrimitiveStreamerVbo<T>` | GL 2.0 基线，每次 draw `BufferData` |
+| [PrimitiveStreamerBufferData.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamerBufferData.cs) | `PrimitiveStreamerBufferData<T>` | GL 1.5，同 `BufferData` + VAO |
+| [PrimitiveStreamerPersistentMap.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamerPersistentMap.cs) | `PrimitiveStreamerPersistentMap<T>` | GL 4.4 + `ARB_buffer_storage`，持久映射缓冲 + `GpuCommandSync`；满时 1.75× 扩容（上限 8MB） |
+
+**storybrew 用法**：`QuadRendererBuffered` 绘制每个 storyboard 精灵/矩形/渐变；`SpriteRenderer` 提供动画对象用的旋转/缩放/origin API；`DrawArc` 画圆形。流策略自动选最优路径。`Editor.Initialize` 注册 `QuadRendererBuffered`/`LineRendererBuffered` 到 `DrawContext`。
+
+#### 4.5.8 `Graphics/Shaders/` — 声明式 Shader 构建
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [ShaderBuilder.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderBuilder.cs) | `ShaderBuilder` | 由 `VertexDeclaration` + vs/fs snippet 构建 shader；`AddUniform`/`AddVarying`/`AddVertexVariable`/`AddFragmentVariable`/`AddStruct`；内建 `GlPosition`/`GlPointSize`/`GlPointCoord`/`GlFragColor`/`GlFragDepth`；`MinVersion=110`；`Build(log)` 产 `Shader` |
+| [ShaderContext.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderContext.cs) | `ShaderContext` | 跟踪变量依赖/使用，死代码消除；`MarkUsedVariables`/`GenerateCode`；`Declare`/`Assign`/`Condition`/`Comment`/`Preprocessor` |
+| [ShaderSnippet.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderSnippet.cs) | `ShaderSnippet` (abstract) | `Empty` 单例；`RequiredExtensions`/`MinVersion`/`Generate`；可从 `Action<ShaderContext>` 隐式转换 |
+| [ShaderType.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderType.cs) | `ShaderType` | 结构体定义，`AddField`/`FieldAsVariable` |
+| [ShaderVariable.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderVariable.cs) | `ShaderVariable` | 命名变量 + `Reference`/`Assign`/`RecordDependency` |
+| [ShaderFieldVariable.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderFieldVariable.cs) | `ShaderFieldVariable` | 字段访问变量（`base.field`） |
+| [ProgramScope.cs](file:///workspace/brewlib/Graphics/Shaders/ProgramScope.cs) | `ProgramScope` | 管理 struct/uniform/varying；`DeclareTypes`/`DeclareUniforms`/`DeclareVaryings`（仅已用） |
+| [ShaderPartScope.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderPartScope.cs) | `ShaderPartScope` | 每 shader 阶段（vs/fs）变量 |
+
+##### `Graphics/Shaders/Snippets/`
+
+| 文件 | 类型 | 说明 |
+| --- | --- | --- |
+| [Assign.cs](file:///workspace/brewlib/Graphics/Shaders/Snippets/Assign.cs) | `Assign` | `result = expression` |
+| [Condition.cs](file:///workspace/brewlib/Graphics/Shaders/Snippets/Condition.cs) | `Condition` | `if`/`else`，继承扩展/版本 |
+| [CustomSnippet.cs](file:///workspace/brewlib/Graphics/Shaders/Snippets/CustomSnippet.cs) | `CustomSnippet` | 包装 `Action<ShaderContext>` |
+| [Discard.cs](file:///workspace/brewlib/Graphics/Shaders/Snippets/Discard.cs) | `Discard` | `discard;` |
+| [Sequence.cs](file:///workspace/brewlib/Graphics/Shaders/Snippets/Sequence.cs) | `Sequence` | 组合多 snippet |
+| [TextureSampling.cs](file:///workspace/brewlib/Graphics/Shaders/Snippets/TextureSampling.cs) | `TextureSampling` | `result = texture2D(sampler, coord)` |
+
+**storybrew 用法**：shader 构建器让 storybrew 声明式组合 shader（加 tint/flipbook/additive 等 pass）而无需写裸 GLSL。每个 buffered renderer 用 `ShaderBuilder` 生成默认程序。
+
+#### 4.5.9 `Graphics/Text/` — 文本渲染
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [TextFont.cs](file:///workspace/brewlib/Graphics/Text/TextFont.cs) | `TextFont` (interface) | `Name`/`Size`/`LineHeight`/`GetGlyph(char)` |
+| [FontGlyph.cs](file:///workspace/brewlib/Graphics/Text/FontGlyph.cs) | `FontGlyph` | `Texture2dRegion` + `Width`/`Height`/`Size`；纹理为 null 时 `IsEmpty` |
+| [TextFontAtlased.cs](file:///workspace/brewlib/Graphics/Text/TextFontAtlased.cs) | `TextFontAtlased` | 按需生成字形到 `TextureMultiAtlas2d`（512×512）；空白字形纹理为 null |
+| [TextFontManager.cs](file:///workspace/brewlib/Graphics/Text/TextFontManager.cs) | `TextFontManager` | 引用计数字体缓存，键 `"name|size|scaling"`；返回 `TextFontProxy` |
+| [TextFontProxy.cs](file:///workspace/brewlib/Graphics/Text/TextFontProxy.cs) | `TextFontProxy` | 引用计数代理，委托底层 `TextFont` |
+| [TextGenerator.cs](file:///workspace/brewlib/Graphics/Text/TextGenerator.cs) | `TextGenerator` | GDI+ 文本渲染 + `PrivateFontCollection`（嵌入字体）；LRU 缓存（max 64，驱逐到 32）；`CreateBitmap`/`CreateTexture`；阴影画笔做描边 |
+| [TextLayout.cs](file:///workspace/brewlib/Graphics/Text/TextLayout.cs) | `TextLayout` | 经 `LineBreaker` 换行；类型 `TextLayoutLine`/`TextLayoutGlyph`；导航 `GetCharacterIndexAt`/`ForTextBounds`/`Above`/`Below` |
+
+**storybrew 用法**：所有屏幕文本（对象标签、时间线、属性面板、文本框）经 `TextFontManager` → `TextFontAtlased` → `TextLayout`。`TextGenerator` 为嵌入字体提供 GDI+ 栅格化桥接。
+
+#### 4.5.10 `Graphics/Textures/` — 纹理管理
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Texture.cs](file:///workspace/brewlib/Graphics/Textures/Texture.cs) | `Texture` (interface) | `Description`/`BindableTexture` |
+| [BindableTexture.cs](file:///workspace/brewlib/Graphics/Textures/BindableTexture.cs) | `BindableTexture` (interface) | `TextureId`/`TexturingMode` |
+| [Texture2d.cs](file:///workspace/brewlib/Graphics/Textures/Texture2d.cs) | `Texture2d` | 具体 GL 纹理；静态 `Load`/`LoadBitmap`/`Create`/`LoadTextureOptions`；`Update(bitmap, x, y, options)`；`Dispose` 删 GL 纹理 |
+| [Texture2dRegion.cs](file:///workspace/brewlib/Graphics/Textures/Texture2dRegion.cs) | `Texture2dRegion` | `Texture2d` 子区域 + `Box2` bounds；`UvBounds`/`UvRatio` |
+| [TextureAtlas2d.cs](file:///workspace/brewlib/Graphics/Textures/TextureAtlas2d.cs) | `TextureAtlas2d` | 打包器（`currentX`/`currentY`/`nextY`）；`FillRatio`；`AddRegion` 无空间返回 null |
+| [TextureMultiAtlas2d.cs](file:///workspace/brewlib/Graphics/Textures/TextureMultiAtlas2d.cs) | `TextureMultiAtlas2d` | 多 `TextureAtlas2d` 栈；满时自动 push 新图集；超大纹理单独存 |
+| [TextureContainer.cs](file:///workspace/brewlib/Graphics/Textures/TextureContainer.cs) | `TextureContainer` (interface) | `ResourceNames`/`UncompressedMemoryUseMb`/`ResourceLoaded` 事件/`Get(filename)` |
+| [TextureContainerAtlas.cs](file:///workspace/brewlib/Graphics/Textures/TextureContainerAtlas.cs) | `TextureContainerAtlas` | 按 `TextureOptions` 分组到不同 `TextureMultiAtlas2d` |
+| [TextureContainerSeparate.cs](file:///workspace/brewlib/Graphics/Textures/TextureContainerSeparate.cs) | `TextureContainerSeparate` | 每文件一个 `Texture2d` |
+| [TextureOptions.cs](file:///workspace/brewlib/Graphics/Textures/TextureOptions.cs) | `TextureOptions` | `Srgb`/`PreMultiply`/`GenerateMipmaps` + filter/wrap；从 JSON sidecar（`filename-opt.json`）加载；反射字段解析 |
+
+**storybrew 用法**：纹理图集系统对性能至关重要——每个精灵、字形、皮肤图经 `TextureContainerAtlas` 打包到共享图集。`TextureOptions` sidecar 让 storybrew 指定每纹理 filter/wrap（如 repeat 平铺背景）。`Project` 持 `TextureContainerSeparate` 实例。
+
+#### 4.5.11 `Input/` — 输入管理
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [InputHandler.cs](file:///workspace/brewlib/Input/InputHandler.cs) | `InputHandler` (interface) | `OnFocusChanged`/`OnClickDown`/`Up`/`OnMouseWheel`/`OnMouseMove`/`OnKeyDown`/`Up`/`OnKeyPress`/`OnGamepadConnected`/`OnButtonDown`/`Up`（bool 返回表示是否消费） |
+| [InputAdapter.cs](file:///workspace/brewlib/Input/InputAdapter.cs) | `InputAdapter` (abstract) | 空操作基类，供子类化 |
+| [InputManager.cs](file:///workspace/brewlib/Input/InputManager.cs) | `InputManager` | 包装 `GameWindow` 事件；`Mouse`/`Keyboard` 设备；`Control`/`Shift`/`Alt` + `*Only` 辅助；手柄管理；滚轮去重 |
+| [InputDispatcher.cs](file:///workspace/brewlib/Input/InputDispatcher.cs) | `InputDispatcher` | 广播到 `InputHandler` 列表；bool 事件在首个返回 true 的 handler 停止 |
+| [GamepadManager.cs](file:///workspace/brewlib/Input/GamepadManager.cs) | `GamepadManager` | 轮询 `GamePadState`；断开时键盘回退；deadzone；`GamepadButton` 标志枚举（25 按钮）；`OnConnected`/`OnButtonDown`/`OnButtonUp` |
+
+**storybrew 用法**：`InputManager` 是接到 OpenTK `GameWindow` 的单一入口；`InputDispatcher` 是 `WidgetManager`/`ScreenLayerManager` 注册接收冒泡输入的渠道。bool 返回模式支持输入捕获（如模态对话框吃掉点击）。
+
+#### 4.5.12 `ScreenLayers/` — 屏幕层栈
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [ScreenLayer.cs](file:///workspace/brewlib/ScreenLayers/ScreenLayer.cs) | `ScreenLayer` (abstract) | `InputAdapter` + `IDisposable`。`State` 枚举：`Hidden`/`FadingIn`/`Active`/`FadingOut`；`TransitionIn`/`OutDuration`；`Update(isTopFocus, isCovered)` 驱动状态机；生命周期 `OnStart`/`OnTransitionIn`/`Out`/`OnActive`/`OnHidden`/`OnExit`；`Exit(skipTransition)`；默认 Escape 关闭；持 `InputDispatcher` |
+| [ScreenLayerManager.cs](file:///workspace/brewlib/ScreenLayers/ScreenLayerManager.cs) | `ScreenLayerManager` | 层栈 + 焦点管理；`Add`/`Set`/`Remove`/`Close`/`Exit`；`Update(isFixedRateUpdate)` 处理焦点转换 + popup/covered 逻辑；`Draw` 带 tween；栈空时退出窗口 |
+
+**storybrew 用法**：storybrew 的主编辑器、对话框、storyboard 预览各为 `ScreenLayer` 子类（`UiScreenLayer`）。栈式 manager 提供模态对话框行为（如偏好设置覆盖但不替换编辑器）。
+
+#### 4.5.13 `Time/` — 时间源
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [TimeSource.cs](file:///workspace/brewlib/Time/TimeSource.cs) | `ReadOnlyTimeSource`/`TimeSource` | 只读：`Current`/`TimeFactor`/`Playing`；可变增加 setter + `Seek` |
+| [Clock.cs](file:///workspace/brewlib/Time/Clock.cs) | `Clock : TimeSource` | 基于 `Stopwatch`，调 `TimeFactor` 时保持当前时间 |
+| [FrameClock.cs](file:///workspace/brewlib/Time/FrameClock.cs) | `FrameClock` (`FrameTimeSource`) | `Current`/`Previous`/`Elapsed`；`AdvanceFrame(duration)`/`AdvanceFrameTo(time)`/`Reset`；`Changed` 事件 |
+| [TimeSourceExtender.cs](file:///workspace/brewlib/Time/TimeSourceExtender.cs) | `TimeSourceExtender` | 用 `Clock` 包装 `TimeSource`；源暂停时回退到 clock；`Update()` 同步 clock 到源 |
+
+**storybrew 用法**：`AudioChannelTimeSource`（Audio 模块）被 `TimeSourceExtender` 包装，使编辑器时间线在音频暂停/停止时仍能（经回退 clock）前进。`FrameClock` 驱动每帧 delta 计算（`Editor.TimeSource`）。
+
+#### 4.5.14 `UserInterface/` — Widget 框架
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Widget.cs](file:///workspace/brewlib/UserInterface/Widget.cs) | `Widget` | **基类**。身份/父子：`Id`/`Manager`/`Displayed`/`Visible`/`Hoverable`/`ClipChildren`/`Opacity`/`StyleName`/`Background`/`Foreground`/`Tooltip`/`Add`/`Remove`/`HasAncestor`/`Descendant`。布局：`Offset`/`Size`/`AbsolutePosition`/`Bounds`/`AnchorTarget`/`AnchorFrom`/`AnchorTo`/`MinSize`/`MaxSize`/`PreferredSize`/`Pack`/`InvalidateLayout`/`ValidateLayout`。事件：`OnClickDown`/`Up`/`OnClickMove`/`OnMouseWheel`/`OnKeyDown`/`Up`/`OnKeyPress`/`OnHovered`/`OnFocusChange`/`OnGamepadButtonDown`/`Up`（`HandleableWidgetEventHandler<T>`）。拖放：`GetDragData`/`HandleDrop`。样式：`RefreshStyle`/`ApplyStyle`/`BuildStyleName` |
+| [WidgetManager.cs](file:///workspace/brewlib/UserInterface/WidgetManager.cs) | `WidgetManager` | `InputHandler` + `IDisposable`。根 widget + tooltip 覆盖；`HoveredWidget`/`KeyboardFocus`；`Camera` + `Changed`；`RefreshHover`；tooltip 注册；锚定迭代（max 8）；`SnapToPixel`；拖放状态；输入冒泡分发 |
+| [WidgetEvent.cs](file:///workspace/brewlib/UserInterface/WidgetEvent.cs) | `WidgetEvent` 等 | `Target`/`RelatedTarget`/`Listener`/`Handled`；`WidgetHoveredEventArgs`/`WidgetFocusEventArgs` |
+| [Button.cs](file:///workspace/brewlib/UserInterface/Button.cs) | `Button : Widget, Field` | `Label` 子 + `ClickBehavior`；`Text`/`Icon`/`Padding`/`Checkable`/`Checked`/`Disabled`；`OnClick`/`OnValueChanged`；hover/pressed/disabled 样式 |
+| [Label.cs](file:///workspace/brewlib/UserInterface/Label.cs) | `Label : Widget` | `TextDrawable` 包装；`Text`/`Icon`/`TextBounds`；`GetCharacterBounds`/`ForTextBounds`/`GetCharacterIndexAt`/`Above`/`Below` |
+| [Textbox.cs](file:///workspace/brewlib/UserInterface/Textbox.cs) | `Textbox : Widget, Field` | `Label` + 内容 + 光标行；`cursorPosition`/`selectionStart`/`SelectionLeft`/`Right`/`Length`；`Value`/`SetValueSilent`/`AcceptMultiline`/`EnterCommits`；完整键盘处理（BackSpace/Delete/A/C/V/X/Left/Right/Up/Down/Home/End/Enter）；`OnValueChanged`/`OnValueCommited`；剪贴板 |
+| [Slider.cs](file:///workspace/brewlib/UserInterface/Slider.cs) | `Slider : ProgressBar` | `Step`/`Disabled`；拖拽；`GetValueForPosition`/`OnValueCommited`；虚 `DragStart`/`Update`/`End` |
+| [Image.cs](file:///workspace/brewlib/UserInterface/Image.cs) | `Image : Widget` | `Sprite` 包装；`Texture`；`PreferredSize` 取自 sprite |
+| [ProgressBar.cs](file:///workspace/brewlib/UserInterface/ProgressBar.cs) | `ProgressBar : Widget, Field` | bar `Drawable`；`MinValue`/`MaxValue`/`Value`/`SetValueSilent`/`OnValueChanged` |
+| [LinearLayout.cs](file:///workspace/brewlib/UserInterface/LinearLayout.cs) | `LinearLayout` | 水平/垂直；`Spacing`/`Padding`/`FitChildren`/`Fill`；空间分配算法尊重 `MinSize`/`MaxSize`/`CanGrow`；虚 `PlaceChildren` |
+| [StackLayout.cs](file:///workspace/brewlib/UserInterface/StackLayout.cs) | `StackLayout` | 单子适配；`FitChildren`；虚 `PlaceChildren` |
+| [FlowLayout.cs](file:///workspace/brewlib/UserInterface/FlowLayout.cs) | `FlowLayout` | 换行布局；`Spacing`/`LineSpacing`/`Padding`/`FitChildren`/`Fill`；逐行测量 + 行内垂直对齐 |
+| [ScrollArea.cs](file:///workspace/brewlib/UserInterface/ScrollArea.cs) | `ScrollArea` | `ClipChildren` 容器 + `StackLayout`；`ScrollsVertically`/`Horizontally`/`ScrollableX`/`Y`；滚动指示器；拖拽 + 滚轮 |
+| [Field.cs](file:///workspace/brewlib/UserInterface/Field.cs) | `Field` (interface) | `FieldValue` + `OnValueChanged` + `OnDisposed` |
+| [ClickBehavior.cs](file:///workspace/brewlib/UserInterface/ClickBehavior.cs) | `ClickBehavior` | 跟踪 `Hovered`/`Pressed`/`Disabled`；`OnStateChanged`/`OnClick`；按下需同键释放 |
+| [DrawableContainer.cs](file:///workspace/brewlib/UserInterface/DrawableContainer.cs) | `DrawableContainer` | 持 `Drawable` 的 widget；`SetFromSkin(name)` |
+
+##### `UserInterface/Skinning/`
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Skinning/Skin.cs](file:///workspace/brewlib/UserInterface/Skinning/Skin.cs) | `Skin` | `TextureContainer` + drawables/styles 字典；`GetDrawable`/`GetStyle<T>` 含隐式父样式解析（`"default #hover"` → `"default"`）；加载 JSON（含 includes/constants）；类型解析委托；字段解析器（string/float/int/bool/`Texture2dRegion`/`Drawable`/`Vector2`/`Color4`/`FourSide`） |
+
+##### `UserInterface/Skinning/Styles/`
+
+| 文件 | 类型 | 说明 |
+| --- | --- | --- |
+| [WidgetStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/WidgetStyle.cs) | `WidgetStyle` | `Background`/`Foreground` Drawables |
+| [ButtonStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/ButtonStyle.cs) | `ButtonStyle` | `Padding`/`LabelStyle`/`LabelOffset` |
+| [LabelStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/LabelStyle.cs) | `LabelStyle` | `FontName`/`FontSize`/`TextAlignment`/`Trimming`/`Color` |
+| [ImageStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/ImageStyle.cs) | `ImageStyle` | `Color`/`ScaleMode` |
+| [LinearLayoutStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/LinearLayoutStyle.cs) | `LinearLayoutStyle` | `Spacing` |
+| [ProgressBarStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/ProgressBarStyle.cs) | `ProgressBarStyle` | `Bar`(Drawable)/`Height` |
+| [StackLayoutStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/StackLayoutStyle.cs) | `StackLayoutStyle` | 空，继承 `WidgetStyle` |
+| [TextboxStyle.cs](file:///workspace/brewlib/UserInterface/Skinning/Styles/TextboxStyle.cs) | `TextboxStyle` | `LabelStyle`/`ContentStyle` |
+
+**storybrew 用法**：编辑器每个面板、对话框、按钮、滑块、文本框都建在此 widget 树上。`Skin` 提供 JSON 驱动主题（用户可换肤）；`LinearLayout`/`FlowLayout`/`StackLayout` 是属性面板布局原语；`ScrollArea` 包裹长列表（对象列表、图层列表）。`editor` 的 `HsbColorPicker`/`Selectbox`/`PathSelector`/`Vector2Picker`/`TimelineSlider` 等均继承 `Widget` 并实现 `Field`。
+
+#### 4.5.15 `Util/` — 通用工具
+
+| 文件 | 关键类型 | 说明 |
+| --- | --- | --- |
+| [Misc.cs](file:///workspace/brewlib/Util/Misc.cs) | `Misc` (static) | `WithRetries(action, timeout, canThrow)` 指数退避重试 |
+| [SafeWriteStream.cs](file:///workspace/brewlib/Util/SafeWriteStream.cs) | `SafeWriteStream` | 写 `.tmp` 的 `FileStream`；`Commit()` 后 `File.Replace`/`Move` |
+| [SafeDirectoryWriter.cs](file:///workspace/brewlib/Util/SafeDirectoryWriter.cs) | `SafeDirectoryWriter` | 临时目录 + 备份目录，`Commit` 时交换 |
+| [SafeDirectoryReader.cs](file:///workspace/brewlib/Util/SafeDirectoryReader.cs) | `SafeDirectoryReader` | 从目标或 `.bak` 备份读取 |
+| [ByteCounterStream.cs](file:///workspace/brewlib/Util/ByteCounterStream.cs) | `ByteCounterStream` | 只写计数流 |
+| [PathHelper.cs](file:///workspace/brewlib/Util/PathHelper.cs) | `PathHelper` (static) | `WithPlatformSeparators`/`WithStandardSeparators`(`/`)/`FolderContainsPath`/`GetRelativePath`/`IsValidPath`/`IsValidFilename` |
+| [Native.cs](file:///workspace/brewlib/Util/Native.cs) | `Native` (static) | P/Invoke `memcpy`/`memset`/`memcmp` + user32（`SwitchToThisWindow`/`EnumThreadWindows`/`GetWindowText`）；`FindProcessWindow` 按标题找窗口 |
+| [MathUtil.cs](file:///workspace/brewlib/Util/MathUtil.cs) | `MathUtil` (static) | `FloatEquals`/`DoubleEquals`/`NextPowerOfTwo`/`ShortestAngleDelta` |
+| [VectorExtensions.cs](file:///workspace/brewlib/Util/VectorExtensions.cs) | static ext | `Round`/`ClampLength`/`Project`/`Side`（`Vector2`/`Vector3`） |
+| [ColorExtensions.cs](file:///workspace/brewlib/Util/ColorExtensions.cs) | static ext | `Multiply`/`ToRgba`/`ToColor4`/`Lerp`/`LerpColor`/`ToHsba`/`WithOpacity`/`Premultiply`/`ToLinear`/`ToSrgb` |
+| [StringHelper.cs](file:///workspace/brewlib/Util/StringHelper.cs) | `StringHelper` (static) | `ToByteSize`（b/kb/mb/gb/tb） |
+| [StringExtensions.cs](file:///workspace/brewlib/Util/StringExtensions.cs) | static ext | `StripUtf8Bom`/`PrettifyDashSeparated`（TitleCase + dash→space） |
+| [DateTimeExtensions.cs](file:///workspace/brewlib/Util/DateTimeExtensions.cs) | static ext | `ToTimeAgo`（"a minute ago"/"yesterday" 等） |
+| [LineBreaker.cs](file:///workspace/brewlib/Util/LineBreaker.cs) | `LineBreaker` | Unicode TR14 换行；`Breakability`（`Opportunity`/`Allowed`/`Prohibited`）；字符表 `breakOpportunityAfter`/`Before`/`Prohibited`/`causesBreakAfter` |
+| [TraceLogger.cs](file:///workspace/brewlib/Util/TraceLogger.cs) | `TraceLogger` | 写文件的 `TraceListener`（带锁） |
+| [ChangedHandler.cs](file:///workspace/brewlib/Util/ChangedHandler.cs) | `ChangedHandler`/`ChangedEventArgs` | `PropertyName` + `All` 单例；`ChangedHandler` 委托 |
+| [EventHelper.cs](file:///workspace/brewlib/Util/EventHelper.cs) | `EventHelper` (static) | `InvokeStrict` 跳过调用期间被移除的委托 |
+| [ActionDisposable.cs](file:///workspace/brewlib/Util/ActionDisposable.cs) | `ActionDisposable` | 包装 `Action` 的 `IDisposable` |
+| [ClipboardHelper.cs](file:///workspace/brewlib/Util/ClipboardHelper.cs) | `ClipboardHelper` (static) | `SetText`/`GetText`/`SetData`/`GetData`（500ms 重试） |
+| [HashHelper.cs](file:///workspace/brewlib/Util/HashHelper.cs) | `HashHelper` (static) | `GetMd5(string/byte[])`/`GetFileMd5`/`GetFileMd5Bytes` |
+| [BoxAlignment.cs](file:///workspace/brewlib/Util/BoxAlignment.cs) | `BoxAlignment` (flags enum) | `Centre=0`/`Top=1`/`Bottom=2`/`Right=4`/`Left=8` + 组合 + `Vertical`/`Horizontal` |
+| [FourSide.cs](file:///workspace/brewlib/Util/FourSide.cs) | `FourSide`/`FourSide<T>` (struct) | `Top`/`Right`/`Bottom`/`Left` + `Horizontal`/`Vertical`；`GetHorizontalOffset`/`GetVerticalOffset`/`GetOffset(BoxAlignment)` |
+| [ScaleMode.cs](file:///workspace/brewlib/Util/ScaleMode.cs) | `ScaleMode` (enum) | `None`/`Fill`/`Fit`/`Repeat`/`RepeatFit` |
+| [Line.cs](file:///workspace/brewlib/Util/Line.cs) | `Line` (struct) | `Start`/`End`（`Vector2`） |
+| [BitmapHelper.cs](file:///workspace/brewlib/Util/BitmapHelper.cs) | static | `Blur`/`Premultiply`/`CalculateGaussianKernel`/`Convolute`/`ConvoluteAlpha`/`FindTransparencyBounds`；内 `PinnedBitmap`（`GCHandle`） |
+| [VectorHelper.cs](file:///workspace/brewlib/Util/VectorHelper.cs) | static | `FromPolar`/`GetAngle`/`SegmentClosestPoint`/`SegmentsIntersect` |
+| [GameWindowExtensions.cs](file:///workspace/brewlib/Util/GameWindowExtensions.cs) | static ext | `GetWindowHandle`（`Native.FindProcessWindow` 回退） |
+| [IconFont.cs](file:///workspace/brewlib/Util/IconFont.cs) | `IconFont` (enum) | FontAwesome unicode 码点（`Adjust=0xf042` 起） |
+| [ZipArchiveExtensions.cs](file:///workspace/brewlib/Util/ZipArchiveExtensions.cs) | static ext | `ExtractToDirectoryOverwrite` |
+| [ListExtensions.cs](file:///workspace/brewlib/Util/ListExtensions.cs) | static ext | `Move<T>(from, to)` |
+
+**storybrew 用法**：安全 I/O 三件套（`SafeWriteStream`/`SafeDirectoryWriter`/`SafeDirectoryReader`）保护项目文件写入防崩溃损坏——是 storybrew 保存逻辑的核心。`LineBreaker` 支撑 `TextLayout` 换行。`IconFont` 提供编辑器 UI 全部图标字形。`ColorExtensions`（`Premultiply`/`ToLinear`/`ToSrgb`）处理纹理加载与 shader 输出的色彩空间转换。`PathHelper` 标准化跨平台路径。`ChangedHandler`/`ChangedEventArgs` 被 `EditorStoryboardLayer.OnChanged` 等使用。
+
+#### 4.5.16 brewlib 横切关注点
+
+- **依赖注入**：`DrawContext` 是每帧 DI 作用域，渲染器经它注册/检索。
+- **状态管理**：`DrawState`（静态）是 GL 状态唯一真相源，能力检测驱动 `PrimitiveStreamerUtil` 的流策略选择。
+- **资源生命周期**：`TextFontManager`/`TextFontProxy` 引用计数；`IDisposable` 模式遍布（`AudioChannel`/`Texture2d`/`RenderTarget`/`WidgetManager`/`ScreenLayer`）。
+- **主题化**：`Skin` JSON（含 includes/constants/父样式解析）是唯一主题机制；每个 widget 经 `BuildStyleName` + `ApplyStyle` 参与。
+- **计时**：`TimeSource` → `TimeSourceExtender` → `AudioChannelTimeSource` 链保持 storyboard 画布、音频播放、动画时间线同步。
+
+> 如需构建本仓库，须先执行 `git submodule update --init brewlib`（已完成，提交 `138c711`）。
 
 ---
 
@@ -529,6 +800,7 @@ test ─────▶ common
 
 | 项目 | 包 |
 | --- | --- |
+| `brewlib` | `ManagedBass 1.0.2`、`ManagedBass.Fx 1.0.2`、`OpenTK 2.0.0`、`Damnae.Tiny 1.2.0`、`System.Management 8.0.0`（+ 打包 `bass.dll`/`bass_fx.dll`） |
 | `common` | `OpenTK 2.0.0`、`System.Drawing.Common 8.0.8`、`System.ValueTuple 4.5.0`、`Damnae.Tiny 1.2.0` |
 | `editor` | `Microsoft.CodeAnalysis.Common 4.11.0`、`Microsoft.CodeAnalysis.CSharp 4.11.0`、`Microsoft.Net.Compilers.Toolset 4.11.0`（private）、`OpenTK 2.0.0` |
 | `scripts` | `OpenTK 2.0.0` |
@@ -546,6 +818,15 @@ test ─────▶ common
 - **Animations → Storyboarding**：`EasingFunctions.ToEasingFunction` 映射 `OsbEasing`；`KeyframedValue` 被 `CommandGenerator`、3D 节点、`PerspectiveCamera` 使用。
 - **Subtitles → Scripting/Util**：`StoryboardObjectGenerator.LoadFont` 建 `FontGenerator`；`FontGenerator` 用 `BitmapHelper`（glow/trim）与 `StreamReaderExtensions`（经 `AssParser`）。
 - **Util → Storyboarding**：`StoryboardTransform` 包装 `Affine2`；`OrientedBoundingBox` 被 `OsbSprite.InScreenBounds` 与 `CommandGenerator.State.IsVisible` 使用；`ObjectSerializer` 决定哪些字段可 `[Configurable]`；`NamedValue` 支撑 `EffectConfig` 枚举可选值。
+- **editor → brewlib.Graphics**：`Editor.Initialize` 注册 `TextureContainerAtlas`(1024×1024)/`QuadRendererBuffered`/`LineRendererBuffered` 到 `DrawContext`；`EditorOsbSprite.Draw` 经 `DrawState.Prepare(QuadRenderer, camera, states).Draw` 渲染；`StoryboardDrawable` 实现 `Drawable`；`UiScreenLayer` 用 `CameraOrtho`。
+- **editor → brewlib.UserInterface**：`UiScreenLayer.Load` 建 `WidgetManager`；`EffectList`/`LayerList`/`SettingsMenu`/`EffectConfigUi`/`TimelineSlider`/`HsbColorPicker`/`Selectbox`/`PathSelector`/`Vector2Picker`/`Vector3Picker` 均继承 `Widget`（部分实现 `Field`）；`Editor.Initialize` 加载 `Skin`（`skin.json` + includes）。
+- **editor → brewlib.Audio**：`Program.AudioManager`（`AudioManager`）；`ProjectMenu` 用 `AudioStream` + `AudioChannelTimeSource` + `TimeSourceExtender` 驱动时间线；`EditorGeneratorContext` 用 `FftStream` 提供频谱；`EditorOsbSample.TriggerEvent` 用 `AudioSampleContainer` 播音效。
+- **editor → brewlib.ScreenLayers**：`Editor` 持 `ScreenLayerManager`；`StartMenu`/`NewProjectMenu`/`ProjectMenu`/`UpdateMenu`/`ReferencedAssemblyConfig` 及 `ContextMenu`/`LoadingScreen`/`MessageBox`/`PromptBox` 均为 `UiScreenLayer : ScreenLayer`。
+- **editor → brewlib.Time**：`Editor.TimeSource` 为 `FrameClock`；`ProjectMenu` 用 `TimeSourceExtender` 包装音频时间源。
+- **editor → brewlib.Data**：`Editor.Initialize` 用 `AssemblyResourceContainer` 加载嵌入资源（皮肤/字体/shader/项目模板）。
+- **editor → brewlib.Util**：`Project.Save` 用 `SafeDirectoryWriter`/`SafeWriteStream`；`Project.ExportToOsb` 用 `SafeWriteStream`；`EffectConfigUi` 剪贴板用 `ClipboardHelper`；`EffectList` 图标用 `IconFont`；`EditorStoryboardLayer.OnChanged` 用 `ChangedHandler`/`ChangedEventArgs`；`MapsetManager`/`ScriptManager`/`MultiFileWatcher` 用 `ThrottledActionScheduler`（editor 自有，但模式源自 brewlib）。
+- **common → brewlib.Util**：`common/Util/Misc.cs` 直接包装 `BrewLib.Util.Misc.WithRetries`。
+- **common → brewlib.Graphics.Textures**：`common` 的 `OsbSprite`/`StoryboardObjectGenerator.GetMapsetBitmap` 间接经 editor 的 `TextureContainer` 使用 brewlib 纹理抽象。
 
 ### 6.4 editor 内部关键依赖
 
@@ -655,6 +936,14 @@ dotnet test test/test.csproj
 | `RotationMode` | [Sprite3d.cs](file:///workspace/common/Storyboarding3d/Sprite3d.cs) | Fixed, UnitX, UnitY |
 | `EffectStatus` | [Effect.cs](file:///workspace/editor/Storyboarding/Effect.cs) | Initializing, Loading, Configuring, Updating, ReloadPending, Ready, CompilationFailed, LoadingFailed, ExecutionFailed, UpdateCanceled |
 | `PathSelectorMode` | [PathSelector.cs](file:///workspace/editor/UserInterface/PathSelector.cs) | Folder, OpenFile, OpenDirectory, SaveFile |
+| `BlendingMode` | [RenderStates.cs](file:///workspace/brewlib/Graphics/RenderStates.cs) | Off, Alphablend, Color, Additive, BlendAdd, Premultiply, Premultiplied |
+| `ScaleMode` | [ScaleMode.cs](file:///workspace/brewlib/Util/ScaleMode.cs) | None, Fill, Fit, Repeat, RepeatFit |
+| `BoxAlignment` | [BoxAlignment.cs](file:///workspace/brewlib/Util/BoxAlignment.cs) | Centre=0, Top=1, Bottom=2, Right=4, Left=8（flags，含组合） |
+| `ScreenLayer.State` | [ScreenLayer.cs](file:///workspace/brewlib/ScreenLayers/ScreenLayer.cs) | Hidden, FadingIn, Active, FadingOut |
+| `ResourceSource` | [ResourceContainer.cs](file:///workspace/brewlib/Data/ResourceContainer.cs) | Embedded, Relative, Absolute（flags；组合 `Local`/`Any`） |
+| `GamepadButton` | [GamepadManager.cs](file:///workspace/brewlib/Input/GamepadManager.cs) | 25 个手柄按钮（flags） |
+| `AttributeUsage` | [VertexAttribute.cs](file:///workspace/brewlib/Graphics/VertexAttribute.cs) | 顶点属性用途分类 |
+| `Breakability` | [LineBreaker.cs](file:///workspace/brewlib/Util/LineBreaker.cs) | Opportunity, Allowed, Prohibited |
 
 ### 8.2 项目常量速查
 
@@ -674,6 +963,15 @@ dotnet test test/test.csproj
 | `ThrottledActionScheduler.Delay` | 100 (ms) | [ThrottledActionScheduler.cs](file:///workspace/editor/Util/ThrottledActionScheduler.cs) |
 | `FontDescription.FontSize`（默认） | 76 | [FontGenerator.cs](file:///workspace/common/Subtitles/FontGenerator.cs) |
 | `Camera.Resolution`（默认） | 1366×768 | [Camera.cs](file:///workspace/common/Storyboarding3d/Camera.cs) |
+| `AudioSample.MaxSimultaneousPlayBacks` | 8 | [AudioSample.cs](file:///workspace/brewlib/Audio/AudioSample.cs) |
+| `QuadRendererBuffered.maxQuadsPerBatch` | 4096 | [QuadRendererBuffered.cs](file:///workspace/brewlib/Graphics/Renderers/QuadRendererBuffered.cs) |
+| `TextFontAtlased` 图集尺寸 | 512×512 | [TextFontAtlased.cs](file:///workspace/brewlib/Graphics/Text/TextFontAtlased.cs) |
+| `TextGenerator` LRU 缓存 | max 64，驱逐到 32 | [TextGenerator.cs](file:///workspace/brewlib/Graphics/Text/TextGenerator.cs) |
+| `PrimitiveStreamerPersistentMap` 扩容 | 1.75×，上限 8MB | [PrimitiveStreamerPersistentMap.cs](file:///workspace/brewlib/Graphics/Renderers/PrimitiveStreamers/PrimitiveStreamerPersistentMap.cs) |
+| `ShaderBuilder.MinVersion` | 110 | [ShaderBuilder.cs](file:///workspace/brewlib/Graphics/Shaders/ShaderBuilder.cs) |
+| `CameraPerspective.FieldOfView`（默认） | 67 | [CameraPerspective.cs](file:///workspace/brewlib/Graphics/Cameras/CameraPerspective.cs) |
+| `ClipboardHelper` 重试时长 | 500 (ms) | [ClipboardHelper.cs](file:///workspace/brewlib/Util/ClipboardHelper.cs) |
+| `WidgetManager` 锚定迭代上限 | 8 | [WidgetManager.cs](file:///workspace/brewlib/UserInterface/WidgetManager.cs) |
 
 ### 8.3 命令字母与 OSB 格式
 
@@ -702,4 +1000,4 @@ dotnet test test/test.csproj
 
 ---
 
-*本文档由源码静态分析生成，反映仓库当前磁盘状态。*
+*本文档由源码静态分析生成，反映仓库当前磁盘状态（含已检出的 `brewlib` 子模块，提交 `138c71119bbc82516aee69acfd1e99942a60fc0f`）。*
