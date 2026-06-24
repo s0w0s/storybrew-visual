@@ -31,6 +31,11 @@ public static class ValidationDispatcher
             DocumentValidators.ValidateOpaquePersistentIds(document, diagnostics);
         }
 
+        if (scopes.Contains(ValidationScope.Serialization))
+        {
+            SerializationValidators.ValidateRoundTripFidelity(document, diagnostics);
+        }
+
         // TransactionHistory scope validators for documents check document-level transaction invariants
         // (the transaction-specific validators A-D, F, L are called on ExpandBlockTransaction directly)
 

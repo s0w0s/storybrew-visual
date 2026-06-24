@@ -204,13 +204,13 @@ Sprite,3,4,"bg.jpg",320,240
     }
 
     [Fact]
-    public void ExportOsb_ReturnsPlaceholderText()
+    public void ExportOsb_ReturnsOsbText()
     {
-        _controller.Initialize();
+        _controller.OpenOsb(SimpleOsb);
         var osbText = _controller.ExportOsb();
 
         Assert.False(string.IsNullOrEmpty(osbText));
-        Assert.Contains("not yet implemented", osbText);
+        Assert.Contains("[Events]", osbText);
         Assert.Contains("Exported", _view.Status);
     }
 }

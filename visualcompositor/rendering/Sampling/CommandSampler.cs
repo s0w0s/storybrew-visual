@@ -168,7 +168,7 @@ public sealed class CommandSampler
                     }
                     break;
                 }
-            // M, MX, MY, V, C, P require more complex parsing - basic implementation for MVP
+                // M, MX, MY, V, C, P require more complex parsing - basic implementation for MVP
         }
     }
 

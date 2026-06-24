@@ -1,6 +1,9 @@
+using System.Linq;
 using VisualCompositor.Core.Model;
 using VisualCompositor.Core.Primitives;
 using VisualCompositor.Core.Serialization;
+using VisualCompositor.Core.Validation;
+using VisualCompositor.Osb.Export;
 using VisualCompositor.Osb.Import;
 using VisualCompositor.Osb.Parser;
 using VisualCompositor.Rendering.Worker;
@@ -75,12 +78,22 @@ public sealed class CompositorController
         // The actual file reading is handled by the caller via OpenOsb(string)
     }
 
-    public void SaveStorybrewComp(string filePath)
+    public bool SaveStorybrewComp(string filePath)
     {
+        // Pre-save validation (document-state + transaction-history + serialization)
+        var diagnostics = ValidationDispatcher.Validate(_state.Document, ValidationEntryPoint.PreStorybrewCompSave);
+        if (diagnostics.HasErrors)
+        {
+            _view.ShowDiagnostics(diagnostics.Diagnostics.Select(d => d.ToString()).ToList());
+            _view.SetStatus("Save aborted: validation errors");
+            return false;
+        }
+
         var json = StorybrewCompSerializer.Serialize(_state.Document);
         System.IO.File.WriteAllText(filePath, json);
         _view.SetStatus($"Saved to {filePath}");
         _view.SetDirty(false);
+        return true;
     }
 
     private void OnSaveStorybrewComp()
@@ -90,11 +103,19 @@ public sealed class CompositorController
 
     public string ExportOsb()
     {
-        // The export compiler (Phase 7) would produce the .osb text
-        // For MVP, we return a placeholder
-        var osbText = "// .osb export not yet implemented (Phase 7)";
-        _view.SetStatus("Exported .osb (placeholder)");
-        return osbText;
+        // Use the export compiler which runs pre-osb-export validation internally
+        var compiler = new OsbExportCompiler();
+        var result = compiler.Compile(_state.Document);
+
+        if (!result.Succeeded)
+        {
+            _view.ShowDiagnostics(result.Diagnostics.ConvertAll(d => d.ToString()));
+            _view.SetStatus("Export aborted: validation errors");
+            return string.Empty;
+        }
+
+        _view.SetStatus("Exported .osb");
+        return result.Text;
     }
 
     private void OnExportOsb()

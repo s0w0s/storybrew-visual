@@ -63,6 +63,11 @@ public static class Reducer
     private static EditorState ReduceLoadDocument(EditorState state, LoadDocumentAction a)
     {
         var doc = a.Document.Clone();
+
+        // Validate the loaded document at Create entry point
+        var diagnostics = ValidationDispatcher.Validate(doc, ValidationEntryPoint.Create);
+        if (diagnostics.HasErrors) return state; // invalid document: no change
+
         doc.Revision = state.Revision + 1;
         doc.IsDirty = false;
         return NewState(state,
@@ -292,6 +297,11 @@ public static class Reducer
         var entry = state.UndoStack[^1];
         var result = StorybrewCompSerializer.Deserialize(entry.DocumentJson);
         var restoredDoc = result.Document;
+
+        // Validate the restored document at UndoRestore entry point
+        var diagnostics = ValidationDispatcher.Validate(restoredDoc, ValidationEntryPoint.UndoRestore);
+        if (diagnostics.HasErrors) return state; // invalid restore: no change
+
         restoredDoc.Revision = state.Revision + 1;
         restoredDoc.IsDirty = true;
 
@@ -322,7 +332,7 @@ public static class Reducer
         CompositionDocument? newDoc;
         if (entry.ExpandTransaction != null)
         {
-            // Replay, don't recompute
+            // Replay, don't recompute (RedoExpand validates internally)
             newDoc = ExpandBlockOperations.RedoExpand(state.Document, entry.ExpandTransaction);
             if (newDoc == null) return state; // failed redo: stacks unchanged
         }
@@ -330,6 +340,10 @@ public static class Reducer
         {
             var result = StorybrewCompSerializer.Deserialize(entry.DocumentJson);
             newDoc = result.Document;
+
+            // Validate the restored document at RedoRestore entry point
+            var diagnostics = ValidationDispatcher.Validate(newDoc, ValidationEntryPoint.RedoRestore);
+            if (diagnostics.HasErrors) return state; // invalid restore: no change
         }
 
         newDoc.Revision = state.Revision + 1;
@@ -427,16 +441,16 @@ public static class Reducer
         bool? isDirty = null,
         List<HistoryEntry>? undoStack = null,
         List<HistoryEntry>? redoStack = null) => new()
-    {
-        Document = document ?? src.Document,
-        Revision = revision ?? src.Revision,
-        SelectedSpriteIds = selectedSpriteIds ?? src.SelectedSpriteIds,
-        SelectedLayerIds = selectedLayerIds ?? src.SelectedLayerIds,
-        CurrentTime = currentTime ?? src.CurrentTime,
-        ViewportZoom = viewportZoom ?? src.ViewportZoom,
-        ViewportPan = viewportPan ?? src.ViewportPan,
-        IsDirty = isDirty ?? src.IsDirty,
-        UndoStack = undoStack ?? src.UndoStack,
-        RedoStack = redoStack ?? src.RedoStack,
-    };
+        {
+            Document = document ?? src.Document,
+            Revision = revision ?? src.Revision,
+            SelectedSpriteIds = selectedSpriteIds ?? src.SelectedSpriteIds,
+            SelectedLayerIds = selectedLayerIds ?? src.SelectedLayerIds,
+            CurrentTime = currentTime ?? src.CurrentTime,
+            ViewportZoom = viewportZoom ?? src.ViewportZoom,
+            ViewportPan = viewportPan ?? src.ViewportPan,
+            IsDirty = isDirty ?? src.IsDirty,
+            UndoStack = undoStack ?? src.UndoStack,
+            RedoStack = redoStack ?? src.RedoStack,
+        };
 }

@@ -370,98 +370,98 @@ public sealed class ImportMapper
         switch (cmd.CommandLetter)
         {
             case "M":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Position", Vector2ComponentMask.Both, "Vector2");
-                var start = ParseVector2(cmd.StartValue);
-                var end = ParseVector2(cmd.EndValue);
-                track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "MX":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Position", Vector2ComponentMask.X, "Float");
-                var start = ParseFloat(cmd.StartValue);
-                var end = ParseFloat(cmd.EndValue);
-                track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "MY":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Position", Vector2ComponentMask.Y, "Float");
-                var start = ParseFloat(cmd.StartValue);
-                var end = ParseFloat(cmd.EndValue);
-                track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "S":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Scale", Vector2ComponentMask.Both, "Vector2");
-                var start = ParseFloat(cmd.StartValue);
-                var end = ParseFloat(cmd.EndValue);
-                track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.StartTime, Value = new Vector2(start, start), Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.EndTime, Value = new Vector2(end, end) });
-                break;
-            }
-            case "V":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Scale", Vector2ComponentMask.Both, "Vector2");
-                var start = ParseVector2(cmd.StartValue);
-                var end = ParseVector2(cmd.EndValue);
-                track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "R":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Rotation", Vector2ComponentMask.None, "Float");
-                var start = ParseFloat(cmd.StartValue);
-                var end = ParseFloat(cmd.EndValue);
-                track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "F":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Opacity", Vector2ComponentMask.None, "Float");
-                var start = ParseFloat(cmd.StartValue);
-                var end = ParseFloat(cmd.EndValue);
-                track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "C":
-            {
-                var track = GetOrCreateTrack(spriteDecl, "Color", Vector2ComponentMask.None, "Color");
-                var start = ParseColor(cmd.StartValue);
-                var end = ParseColor(cmd.EndValue);
-                track.ColorKeyframes.Add(new Keyframe<Color3> { Time = cmd.StartTime, Value = start, Easing = easing });
-                if (cmd.StartTime != cmd.EndTime)
-                    track.ColorKeyframes.Add(new Keyframe<Color3> { Time = cmd.EndTime, Value = end });
-                break;
-            }
-            case "P":
-            {
-                var paramType = ParseParameter(cmd.StartValue);
-                spriteDecl.ParameterTrack ??= new ParameterTrack();
-                spriteDecl.ParameterTrack.Segments.Add(new ParameterSegment
                 {
-                    Parameter = paramType,
-                    StartTime = cmd.StartTime,
-                    EndTime = cmd.EndTimeIsEmpty ? null : cmd.EndTime,
-                    OpenEndedMode = cmd.EndTimeIsEmpty ? OpenEndedMode.UntilLayerEnd : OpenEndedMode.ExplicitEnd,
-                });
-                break;
-            }
+                    var track = GetOrCreateTrack(spriteDecl, "Position", Vector2ComponentMask.Both, "Vector2");
+                    var start = ParseVector2(cmd.StartValue);
+                    var end = ParseVector2(cmd.EndValue);
+                    track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "MX":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Position", Vector2ComponentMask.X, "Float");
+                    var start = ParseFloat(cmd.StartValue);
+                    var end = ParseFloat(cmd.EndValue);
+                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "MY":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Position", Vector2ComponentMask.Y, "Float");
+                    var start = ParseFloat(cmd.StartValue);
+                    var end = ParseFloat(cmd.EndValue);
+                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "S":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Scale", Vector2ComponentMask.Both, "Vector2");
+                    var start = ParseFloat(cmd.StartValue);
+                    var end = ParseFloat(cmd.EndValue);
+                    track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.StartTime, Value = new Vector2(start, start), Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.EndTime, Value = new Vector2(end, end) });
+                    break;
+                }
+            case "V":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Scale", Vector2ComponentMask.Both, "Vector2");
+                    var start = ParseVector2(cmd.StartValue);
+                    var end = ParseVector2(cmd.EndValue);
+                    track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.Vector2Keyframes.Add(new Keyframe<Vector2> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "R":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Rotation", Vector2ComponentMask.None, "Float");
+                    var start = ParseFloat(cmd.StartValue);
+                    var end = ParseFloat(cmd.EndValue);
+                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "F":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Opacity", Vector2ComponentMask.None, "Float");
+                    var start = ParseFloat(cmd.StartValue);
+                    var end = ParseFloat(cmd.EndValue);
+                    track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.FloatKeyframes.Add(new Keyframe<float> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "C":
+                {
+                    var track = GetOrCreateTrack(spriteDecl, "Color", Vector2ComponentMask.None, "Color");
+                    var start = ParseColor(cmd.StartValue);
+                    var end = ParseColor(cmd.EndValue);
+                    track.ColorKeyframes.Add(new Keyframe<Color3> { Time = cmd.StartTime, Value = start, Easing = easing });
+                    if (cmd.StartTime != cmd.EndTime)
+                        track.ColorKeyframes.Add(new Keyframe<Color3> { Time = cmd.EndTime, Value = end });
+                    break;
+                }
+            case "P":
+                {
+                    var paramType = ParseParameter(cmd.StartValue);
+                    spriteDecl.ParameterTrack ??= new ParameterTrack();
+                    spriteDecl.ParameterTrack.Segments.Add(new ParameterSegment
+                    {
+                        Parameter = paramType,
+                        StartTime = cmd.StartTime,
+                        EndTime = cmd.EndTimeIsEmpty ? null : cmd.EndTime,
+                        OpenEndedMode = cmd.EndTimeIsEmpty ? OpenEndedMode.UntilLayerEnd : OpenEndedMode.ExplicitEnd,
+                    });
+                    break;
+                }
         }
     }
 
