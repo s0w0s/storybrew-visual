@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VisualCompositor.UI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8947bf93e06c83b7e7c2842760abd93c088185f5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b864ebab545175ac318d4250320bf0019d38eed7")]
 [assembly: System.Reflection.AssemblyProductAttribute("VisualCompositor.UI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VisualCompositor.UI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
