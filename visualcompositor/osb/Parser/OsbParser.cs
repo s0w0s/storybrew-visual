@@ -143,8 +143,13 @@ public sealed class OsbParser
                     }
                 default:
                     {
-                        if (ValuesPerEndpoint.ContainsKey(parts[0]))
+                        // Strip leading underscore (some tools emit " _M,..." instead of " M,...").
+                        var cmdType = parts[0].StartsWith('_') ? parts[0][1..] : parts[0];
+                        if (ValuesPerEndpoint.ContainsKey(cmdType))
                         {
+                            // Replace parts[0] with the stripped form so ParseCommand sees the clean type.
+                            if (parts[0] != cmdType)
+                                parts[0] = cmdType;
                             var cmd = ParseCommand(parts, depth, lineNumber, result);
                             if (currentBlock != null && depth >= 2)
                                 GetBlockCommands(currentBlock).Add(cmd);

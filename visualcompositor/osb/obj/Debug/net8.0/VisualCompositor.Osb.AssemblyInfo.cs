@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VisualCompositor.Osb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09deacebcd98f07a735db16338662fa7ce27eeee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b1b9b3f26430d50c89939a49711431532f55cecd")]
 [assembly: System.Reflection.AssemblyProductAttribute("VisualCompositor.Osb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VisualCompositor.Osb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

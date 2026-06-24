@@ -215,7 +215,7 @@ internal sealed class SpriteExporter
             var startTime = OsbFormat.FormatTime(seg.StartTime);
             // Open-ended (null EndTime) -> empty end time field.
             var endTime = seg.EndTime == null ? "" : OsbFormat.FormatTime(seg.EndTime.Value);
-            lines.Add(new OutputLine($"{SpriteIndent}_P,0,{startTime},{endTime},{letter}"));
+            lines.Add(new OutputLine($"{SpriteIndent}P,0,{startTime},{endTime},{letter}"));
         }
     }
 
@@ -269,14 +269,14 @@ internal sealed class SpriteExporter
         {
             // P has no end value; empty end time if start == end (open-ended).
             var endTime = rel.EndTime == rel.StartTime ? "" : OsbFormat.FormatTime(rel.EndTime);
-            return $"{BlockIndent}_P,{easing},{startTime},{endTime},{rel.StartValue}";
+            return $"{BlockIndent}P,{easing},{startTime},{endTime},{rel.StartValue}";
         }
 
         var endT = OsbFormat.FormatTime(rel.EndTime);
         // Omit end value if it equals start value (matches typical .osb style).
         if (rel.StartValue == rel.EndValue)
-            return $"{BlockIndent}_{rel.CommandType},{easing},{startTime},{endT},{rel.StartValue}";
-        return $"{BlockIndent}_{rel.CommandType},{easing},{startTime},{endT},{rel.StartValue},{rel.EndValue}";
+            return $"{BlockIndent}{rel.CommandType},{easing},{startTime},{endT},{rel.StartValue}";
+        return $"{BlockIndent}{rel.CommandType},{easing},{startTime},{endT},{rel.StartValue},{rel.EndValue}";
     }
 
     // ---------- Segment emission helpers ----------
@@ -402,8 +402,8 @@ internal sealed class SpriteExporter
         var startStr = OsbFormat.FormatTime(startTime);
         var endStr = OsbFormat.FormatTime(endTime);
         return endValue == null
-            ? $"{SpriteIndent}_{letter},{easingStr},{startStr},{endStr},{startValue}"
-            : $"{SpriteIndent}_{letter},{easingStr},{startStr},{endStr},{startValue},{endValue}";
+            ? $"{SpriteIndent}{letter},{easingStr},{startStr},{endStr},{startValue}"
+            : $"{SpriteIndent}{letter},{easingStr},{startStr},{endStr},{startValue},{endValue}";
     }
 
     // ---------- Keyframe deduplication ----------

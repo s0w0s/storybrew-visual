@@ -122,7 +122,7 @@ Sprite,3,4,"bg.jpg",320,240
  M,0,0,2000,320,240,400,240
 """);
         AssertSucceeded(result);
-        Assert.Contains(" _M,0,0,2000,320,240,400,240", result.Text);
+        Assert.Contains(" M,0,0,2000,320,240,400,240", result.Text);
     }
 
     [Fact]
@@ -134,7 +134,7 @@ Sprite,3,4,"bg.jpg",320,240
  F,0,0,1000,0,1
 """);
         AssertSucceeded(result);
-        Assert.Contains(" _F,0,0,1000,0,1", result.Text);
+        Assert.Contains(" F,0,0,1000,0,1", result.Text);
     }
 
     [Fact]
@@ -179,11 +179,11 @@ Sprite,3,4,"bg.jpg",320,240
         // Loop header: 1-space indent.
         Assert.Contains(" L,1000,3", result.Text);
         // Internal commands: 2-space indent.
-        Assert.Contains("  _F,0,0,500,0,1", result.Text);
-        Assert.Contains("  _F,1,500,1000,1,0", result.Text);
+        Assert.Contains("  F,0,0,500,0,1", result.Text);
+        Assert.Contains("  F,1,500,1000,1,0", result.Text);
 
         // Header must appear before its internal commands.
-        Assert.True(result.Text.IndexOf(" L,1000,3") < result.Text.IndexOf("  _F,0,0,500,0,1"));
+        Assert.True(result.Text.IndexOf(" L,1000,3") < result.Text.IndexOf("  F,0,0,500,0,1"));
     }
 
     [Fact]
@@ -197,8 +197,8 @@ Sprite,3,4,"bg.jpg",320,240
 """);
         AssertSucceeded(result);
         Assert.Contains(" T,HitObjects,1000,2000,1", result.Text);
-        Assert.Contains("  _S,0,0,100,1,2", result.Text);
-        Assert.True(result.Text.IndexOf(" T,HitObjects,1000,2000,1") < result.Text.IndexOf("  _S,0,0,100,1,2"));
+        Assert.Contains("  S,0,0,100,1,2", result.Text);
+        Assert.True(result.Text.IndexOf(" T,HitObjects,1000,2000,1") < result.Text.IndexOf("  S,0,0,100,1,2"));
     }
 
     [Fact]
@@ -247,9 +247,9 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _M,0,0,1000,320,240,400,240", result.Text);
-        Assert.DoesNotContain(" _MX,", result.Text);
-        Assert.DoesNotContain(" _MY,", result.Text);
+        Assert.Contains(" M,0,0,1000,320,240,400,240", result.Text);
+        Assert.DoesNotContain(" MX,", result.Text);
+        Assert.DoesNotContain(" MY,", result.Text);
     }
 
     [Fact]
@@ -283,9 +283,9 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _M,0,0,1000,320,240,400,240", result.Text);
-        Assert.DoesNotContain(" _MX,", result.Text);
-        Assert.DoesNotContain(" _MY,", result.Text);
+        Assert.Contains(" M,0,0,1000,320,240,400,240", result.Text);
+        Assert.DoesNotContain(" MX,", result.Text);
+        Assert.DoesNotContain(" MY,", result.Text);
     }
 
     [Fact]
@@ -319,10 +319,10 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _MX,0,0,1000,320,400", result.Text);
-        Assert.Contains(" _MY,0,0,2000,240,300", result.Text);
+        Assert.Contains(" MX,0,0,1000,320,400", result.Text);
+        Assert.Contains(" MY,0,0,2000,240,300", result.Text);
         // No merged M command.
-        Assert.DoesNotContain(" _M,0,0,1000,320,240,400,240", result.Text);
+        Assert.DoesNotContain(" M,0,0,1000,320,240,400,240", result.Text);
     }
 
     [Fact]
@@ -356,10 +356,10 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _MX,0,0,1000,320,400", result.Text);
+        Assert.Contains(" MX,0,0,1000,320,400", result.Text);
         // Y segment easing comes from the start keyframe (Out == 1); start==end so end value omitted.
-        Assert.Contains(" _MY,1,0,1000,240", result.Text);
-        Assert.DoesNotContain(" _M,0,0,1000,320,240,400,240", result.Text);
+        Assert.Contains(" MY,1,0,1000,240", result.Text);
+        Assert.DoesNotContain(" M,0,0,1000,320,240,400,240", result.Text);
     }
 
     // ============================================================
@@ -386,8 +386,8 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _S,0,0,1000,1,2", result.Text);
-        Assert.DoesNotContain(" _V,", result.Text);
+        Assert.Contains(" S,0,0,1000,1,2", result.Text);
+        Assert.DoesNotContain(" V,", result.Text);
     }
 
     [Fact]
@@ -410,8 +410,8 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _V,0,0,1000,1,2,3,4", result.Text);
-        Assert.DoesNotContain(" _S,", result.Text);
+        Assert.Contains(" V,0,0,1000,1,2,3,4", result.Text);
+        Assert.DoesNotContain(" S,", result.Text);
     }
 
     [Fact]
@@ -434,8 +434,8 @@ Sprite,3,4,"bg.jpg",320,240
 
         var result = new OsbExportCompiler().Compile(doc);
         AssertSucceeded(result);
-        Assert.Contains(" _V,0,0,1000,1,1,2,3", result.Text);
-        Assert.DoesNotContain(" _S,", result.Text);
+        Assert.Contains(" V,0,0,1000,1,1,2,3", result.Text);
+        Assert.DoesNotContain(" S,", result.Text);
     }
 
     // ============================================================
@@ -497,7 +497,7 @@ Sprite,3,4,"bg.jpg",320,240
 
         var headerIdx = result.Text.IndexOf(" L,1000,2");
         var rawIdx = result.Text.IndexOf("// after loop header");
-        var relIdx = result.Text.IndexOf("  _F,0,0,500,0,1");
+        var relIdx = result.Text.IndexOf("  F,0,0,500,0,1");
         Assert.True(headerIdx >= 0 && rawIdx >= 0 && relIdx >= 0);
         Assert.True(headerIdx < rawIdx, "Raw block should appear after the loop header line");
         Assert.True(rawIdx < relIdx, "Raw block should appear before the loop's internal command");
@@ -546,7 +546,7 @@ Sprite,3,4,"bg.jpg",320,240
         Assert.Contains("// rebased to end", result.Text);
 
         // Rebased to scope end: appears after the sprite's last command line.
-        var cmdIdx = result.Text.IndexOf(" _F,0,0,1000,0,1");
+        var cmdIdx = result.Text.IndexOf(" F,0,0,1000,0,1");
         var rawIdx = result.Text.IndexOf("// rebased to end");
         Assert.True(cmdIdx >= 0 && rawIdx >= 0);
         Assert.True(cmdIdx < rawIdx, "Rebased raw block should appear at the end of the layer content");
@@ -625,7 +625,7 @@ Sprite,3,4,"bg.jpg",320,240
         AssertSucceeded(result);
         Assert.Contains(result.Diagnostics, d => d.Code == "BEZIER_CURVE_NOT_EXPRESSIBLE");
         // Exported as linear: a single M segment with no handle representation.
-        Assert.Contains(" _M,0,0,1000,320,240,400,240", result.Text);
+        Assert.Contains(" M,0,0,1000,320,240,400,240", result.Text);
     }
 
     [Fact]
@@ -669,7 +669,7 @@ Sprite,3,4,"bg.jpg",320,240
         AssertSucceeded(result);
 
         // 2 original keyframes with a bezier segment → baked into 17 keyframes → 16 M lines.
-        var mLineCount = result.Text.Split('\n').Count(l => l.StartsWith(" _M,"));
+        var mLineCount = result.Text.Split('\n').Count(l => l.StartsWith(" M,"));
         Assert.True(mLineCount > 1, $"Expected multiple baked M lines, got {mLineCount}");
         Assert.Equal(16, mLineCount);
     }
