@@ -1,0 +1,16 @@
+/workspace/visualcompositor/audio/bin/Debug/net8.0/VisualCompositor.Audio.deps.json
+/workspace/visualcompositor/audio/bin/Debug/net8.0/VisualCompositor.Audio.dll
+/workspace/visualcompositor/audio/bin/Debug/net8.0/VisualCompositor.Audio.pdb
+/workspace/visualcompositor/audio/bin/Debug/net8.0/VisualCompositor.Core.dll
+/workspace/visualcompositor/audio/bin/Debug/net8.0/VisualCompositor.Core.pdb
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.csproj.AssemblyReference.cache
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.AssemblyInfoInputs.cache
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.AssemblyInfo.cs
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.csproj.CoreCompileInputs.cache
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.sourcelink.json
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCo.9FD066DE.Up2Date
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.dll
+/workspace/visualcompositor/audio/obj/Debug/net8.0/refint/VisualCompositor.Audio.dll
+/workspace/visualcompositor/audio/obj/Debug/net8.0/VisualCompositor.Audio.pdb
+/workspace/visualcompositor/audio/obj/Debug/net8.0/ref/VisualCompositor.Audio.dll

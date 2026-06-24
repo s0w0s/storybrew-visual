@@ -177,17 +177,17 @@
   - [x] SubTask 27.4: RawBlock 按 anchor 插回（rebase → scope 末尾 → orphan warning）
   - [x] SubTask 27.5: Bezier 导出模式（WarnOnly/FitNearestOsuEasing/BakeToSegments）
   - [x] SubTask 27.6: 导出前 `pre-osb-export` validation
-- [ ] Task 28: Phase 7 单元测试
-  - [ ] SubTask 28.1: 导入后导出往返保真测试
-  - [ ] SubTask 28.2: M/MX+MY 优化测试
-  - [ ] SubTask 28.3: S/V 优化测试
-  - [ ] SubTask 28.4: RawBlock anchor 插回测试
+- [x] Task 28: Phase 7 单元测试
+  - [x] SubTask 28.1: 导入后导出往返保真测试
+  - [x] SubTask 28.2: M/MX+MY 优化测试
+  - [x] SubTask 28.3: S/V 优化测试
+  - [x] SubTask 28.4: RawBlock anchor 插回测试
 
 ## Phase 8-10: 后续阶段（概述）
 
-- [ ] Task 29: Phase 8 — Audio/Beat/Hitsound 支持
-- [ ] Task 30: Phase 9 — Script Sync / Visual Override
-- [ ] Task 31: Phase 10 — Graph Editor / Bezier Export Modes
+- [x] Task 29: Phase 8 — Audio/Beat/Hitsound 支持
+- [x] Task 30: Phase 9 — Script Sync / Visual Override
+- [x] Task 31: Phase 10 — Graph Editor / Bezier Export Modes
 
 # Task Dependencies
 

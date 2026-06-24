@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualCompositor.Rendering"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualCompositor.UI", "visualcompositor\ui\VisualCompositor.UI.csproj", "{5C31808A-2336-4FF6-9CC7-17BCB9DB0D1F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualCompositor.Audio", "visualcompositor\audio\VisualCompositor.Audio.csproj", "{4EADFE89-8828-4D9F-A29B-44F186D18013}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Build|Any CPU = Build|Any CPU
@@ -107,6 +109,12 @@ Global
 		{5C31808A-2336-4FF6-9CC7-17BCB9DB0D1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C31808A-2336-4FF6-9CC7-17BCB9DB0D1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C31808A-2336-4FF6-9CC7-17BCB9DB0D1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EADFE89-8828-4D9F-A29B-44F186D18013}.Build|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EADFE89-8828-4D9F-A29B-44F186D18013}.Build|Any CPU.Build.0 = Debug|Any CPU
+		{4EADFE89-8828-4D9F-A29B-44F186D18013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EADFE89-8828-4D9F-A29B-44F186D18013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EADFE89-8828-4D9F-A29B-44F186D18013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EADFE89-8828-4D9F-A29B-44F186D18013}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,5 +130,6 @@ Global
 		{F75EB619-6075-4A1F-95F5-CDD8B59542BB} = {0384C19F-7E5D-4E2A-A542-DF71BA03C512}
 		{C6581E13-2BD8-42D8-A8C8-CA33721BBECC} = {0384C19F-7E5D-4E2A-A542-DF71BA03C512}
 		{5C31808A-2336-4FF6-9CC7-17BCB9DB0D1F} = {0384C19F-7E5D-4E2A-A542-DF71BA03C512}
+		{4EADFE89-8828-4D9F-A29B-44F186D18013} = {0384C19F-7E5D-4E2A-A542-DF71BA03C512}
 	EndGlobalSection
 EndGlobal

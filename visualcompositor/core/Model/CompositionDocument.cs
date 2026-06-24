@@ -1,3 +1,6 @@
+using VisualCompositor.Core.Model.Overrides;
+using VisualCompositor.Core.Model.ScriptSync;
+
 namespace VisualCompositor.Core.Model;
 
 /// <summary>The root document model for .storybrewcomp.
@@ -29,6 +32,14 @@ public sealed class CompositionDocument
     /// <summary>History of expanded blocks (audit only, not for undo after reopen).</summary>
     public List<ExpandedBlockHistory> ExpandedBlockHistories { get; set; } = new();
 
+    /// <summary>Script sync manifest (provenance linking sprites/blocks to generating scripts).
+    /// Null when script sync is not used.</summary>
+    public ScriptSyncManifest? ScriptSyncManifest { get; set; }
+
+    /// <summary>Non-destructive visual overrides and per-difficulty visibility settings.
+    /// Null when no overrides exist.</summary>
+    public VisualOverrideCollection? VisualOverrides { get; set; }
+
     /// <summary>Document revision counter (incremented on each successful edit).</summary>
     public long Revision { get; set; }
 
@@ -49,6 +60,8 @@ public sealed class CompositionDocument
                 kvp => kvp.Key,
                 kvp => kvp.Value.Clone()),
             ExpandedBlockHistories = ExpandedBlockHistories.ConvertAll(h => h.Clone()),
+            ScriptSyncManifest = ScriptSyncManifest?.Clone(),
+            VisualOverrides = VisualOverrides?.Clone(),
             Revision = Revision,
             IsDirty = IsDirty,
         };

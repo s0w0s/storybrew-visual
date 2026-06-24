@@ -9,6 +9,7 @@
       "VisualCompositor.Core.Tests/1.0.0": {
         "dependencies": {
           "Microsoft.NET.Test.Sdk": "17.8.0",
+          "VisualCompositor.Audio": "1.0.0",
           "VisualCompositor.Core": "1.0.0",
           "VisualCompositor.Osb": "1.0.0",
           "VisualCompositor.Rendering": "1.0.0",
@@ -1025,6 +1026,17 @@
         }
       },
       "xunit.runner.visualstudio/2.5.3": {},
+      "VisualCompositor.Audio/1.0.0": {
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0"
+        },
+        "runtime": {
+          "VisualCompositor.Audio.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "VisualCompositor.Core/1.0.0": {
         "runtime": {
           "VisualCompositor.Core.dll": {
@@ -1710,6 +1722,11 @@
       "sha512": "sha512-HFFL6O+QLEOfs555SqHii48ovVa4CqGYanY+B32BjLpPptdE+wEJmCFNXlLHdEOD5LYeayb9EroaUpydGpcybg==",
       "path": "xunit.runner.visualstudio/2.5.3",
       "hashPath": "xunit.runner.visualstudio.2.5.3.nupkg.sha512"
+    },
+    "VisualCompositor.Audio/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     },
     "VisualCompositor.Core/1.0.0": {
       "type": "project",

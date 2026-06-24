@@ -27,9 +27,13 @@ internal sealed class BezierExporter
 
     /// <summary>Process a list of float keyframes, returning the exported keyframe list.
     /// For <see cref="BezierExportMode.BakeToSegments"/>, intermediate keyframes are inserted
-    /// for any segment whose start keyframe has bezier handles.</summary>
+    /// for any segment whose start keyframe has bezier handles.
+    /// For <see cref="BezierExportMode.FitNearestOsuEasing"/>, each bezier segment is fitted
+    /// to the nearest osu easing (handles replaced with the fitted easing).</summary>
     public List<Keyframe<float>> ProcessFloat(List<Keyframe<float>> keyframes)
     {
+        if (_options.BezierExportMode == BezierExportMode.FitNearestOsuEasing)
+            return FitFloat(keyframes);
         WarnKeyframes(keyframes, "float");
         return _options.BezierExportMode == BezierExportMode.BakeToSegments
             ? BakeFloat(keyframes)
@@ -39,6 +43,8 @@ internal sealed class BezierExporter
     /// <summary>Process a list of Vector2 keyframes.</summary>
     public List<Keyframe<Vector2>> ProcessVector2(List<Keyframe<Vector2>> keyframes)
     {
+        if (_options.BezierExportMode == BezierExportMode.FitNearestOsuEasing)
+            return FitVector2(keyframes);
         WarnKeyframes(keyframes, "vector2");
         return _options.BezierExportMode == BezierExportMode.BakeToSegments
             ? BakeVector2(keyframes)
@@ -227,5 +233,130 @@ internal sealed class BezierExporter
         var ttt = tt * t;
 
         return uuu * p0 + 3 * uu * t * p1 + 3 * u * tt * p2 + ttt * p3;
+    }
+
+    // ---------- FitNearestOsuEasing ----------
+
+    /// <summary>Fit each bezier segment to the nearest osu easing. Handles are replaced with
+    /// the fitted easing. If no good fit is found, a BEZIER_CURVE_NOT_EXPRESSIBLE warning is
+    /// emitted and the keyframe is kept as-is (exported as linear).</summary>
+    private List<Keyframe<float>> FitFloat(List<Keyframe<float>> keyframes)
+    {
+        if (keyframes.Count < 2)
+        {
+            WarnKeyframes(keyframes, "float");
+            return keyframes;
+        }
+
+        var result = new List<Keyframe<float>>(keyframes.Count);
+        for (var i = 0; i < keyframes.Count; i++)
+        {
+            var current = keyframes[i];
+            if (current.Handles != null && i < keyframes.Count - 1)
+            {
+                var next = keyframes[i + 1];
+                var (easing, fitted) = TryFit(current.Handles, current.Value, next.Value);
+                if (fitted)
+                {
+                    result.Add(new Keyframe<float>
+                    {
+                        Time = current.Time,
+                        Value = current.Value,
+                        Easing = easing,
+                        Handles = null,
+                    });
+                    EmitFitDiagnostic(current.Time, "float", easing);
+                }
+                else
+                {
+                    result.Add(current);
+                    WarnBezier(current.Time, "float");
+                }
+            }
+            else
+            {
+                // Last keyframe or no handles: keep as-is. Still warn if it has handles
+                // but no successor (degenerate segment).
+                if (current.Handles != null)
+                    WarnBezier(current.Time, "float");
+                result.Add(current);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>Fit each Vector2 bezier segment to the nearest osu easing. The Y component is
+    /// used for fitting (the fitter is 1D); the X component uses the same easing.</summary>
+    private List<Keyframe<Vector2>> FitVector2(List<Keyframe<Vector2>> keyframes)
+    {
+        if (keyframes.Count < 2)
+        {
+            WarnKeyframes(keyframes, "vector2");
+            return keyframes;
+        }
+
+        var result = new List<Keyframe<Vector2>>(keyframes.Count);
+        for (var i = 0; i < keyframes.Count; i++)
+        {
+            var current = keyframes[i];
+            if (current.Handles != null && i < keyframes.Count - 1)
+            {
+                var next = keyframes[i + 1];
+                var (easing, fitted) = TryFit(current.Handles, current.Value.Y, next.Value.Y);
+                if (fitted)
+                {
+                    result.Add(new Keyframe<Vector2>
+                    {
+                        Time = current.Time,
+                        Value = current.Value,
+                        Easing = easing,
+                        Handles = null,
+                    });
+                    EmitFitDiagnostic(current.Time, "vector2", easing);
+                }
+                else
+                {
+                    result.Add(current);
+                    WarnBezier(current.Time, "vector2");
+                }
+            }
+            else
+            {
+                if (current.Handles != null)
+                    WarnBezier(current.Time, "vector2");
+                result.Add(current);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>Attempt to fit a bezier segment to the nearest osu easing.
+    /// Returns (easing, true) on success (including trivial/linear curves); (None, false) if
+    /// no easing fits within the threshold.</summary>
+    private static (OsbEasing Easing, bool Fitted) TryFit(BezierHandles handles, float startValue, float endValue)
+    {
+        // Trivial handles (zero Y offsets) -> linear (None). This is a successful fit.
+        if (MathF.Abs(handles.OutHandle.Y) < 1e-6f && MathF.Abs(handles.InHandle.Y) < 1e-6f)
+            return (OsbEasing.None, true);
+
+        // Flat curve (startValue == endValue) -> None (constant). Successful fit.
+        if (MathF.Abs(endValue - startValue) < 1e-6f)
+            return (OsbEasing.None, true);
+
+        var fitted = BezierFitter.FitToNearestEasing(handles, startValue, endValue);
+        // None from the fitter (non-trivial handles) means no good fit.
+        return fitted == OsbEasing.None ? (OsbEasing.None, false) : (fitted, true);
+    }
+
+    /// <summary>Emit a BEZIER_FIT_TO_EASING info diagnostic for a successfully fitted segment.</summary>
+    private void EmitFitDiagnostic(double time, string context, OsbEasing easing)
+    {
+        _diagnostics.Add(new Diagnostic
+        {
+            Code = "BEZIER_FIT_TO_EASING",
+            Message = $"Bezier curve at time {OsbFormat.FormatTime(time)} ({context}) fitted to osu easing {easing} ({(int)easing}).",
+            Severity = DiagnosticSeverity.Warning,
+            Scope = "export",
+        });
     }
 }

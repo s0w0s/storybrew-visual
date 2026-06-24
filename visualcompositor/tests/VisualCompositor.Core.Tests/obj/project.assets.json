@@ -1709,6 +1709,19 @@
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
       },
+      "VisualCompositor.Audio/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/VisualCompositor.Audio.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VisualCompositor.Audio.dll": {}
+        }
+      },
       "VisualCompositor.Core/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -5563,6 +5576,11 @@
         "xunit.runner.visualstudio.nuspec"
       ]
     },
+    "VisualCompositor.Audio/1.0.0": {
+      "type": "project",
+      "path": "../../audio/VisualCompositor.Audio.csproj",
+      "msbuildProject": "../../audio/VisualCompositor.Audio.csproj"
+    },
     "VisualCompositor.Core/1.0.0": {
       "type": "project",
       "path": "../../core/VisualCompositor.Core.csproj",
@@ -5592,6 +5610,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "Microsoft.NET.Test.Sdk >= 17.8.0",
+      "VisualCompositor.Audio >= 1.0.0",
       "VisualCompositor.Core >= 1.0.0",
       "VisualCompositor.Osb >= 1.0.0",
       "VisualCompositor.Rendering >= 1.0.0",
@@ -5627,6 +5646,9 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
+            "/workspace/visualcompositor/audio/VisualCompositor.Audio.csproj": {
+              "projectPath": "/workspace/visualcompositor/audio/VisualCompositor.Audio.csproj"
+            },
             "/workspace/visualcompositor/core/VisualCompositor.Core.csproj": {
               "projectPath": "/workspace/visualcompositor/core/VisualCompositor.Core.csproj"
             },

@@ -1,4 +1,6 @@
 using VisualCompositor.Core.Model;
+using VisualCompositor.Core.Model.Overrides;
+using VisualCompositor.Core.Model.ScriptSync;
 using VisualCompositor.Core.Primitives;
 using VisualCompositor.Core.Serialization;
 using VisualCompositor.Core.Validation;
@@ -28,6 +30,15 @@ public static class Reducer
             ExpandBlockAction a => ReduceExpandBlock(state, a),
             AddParameterSegmentAction a => ReduceAddParameterSegment(state, a),
             RemoveParameterSegmentAction a => ReduceRemoveParameterSegment(state, a),
+            RegisterScriptAction a => ReduceRegisterScript(state, a),
+            RemoveScriptAction a => ReduceRemoveScript(state, a),
+            SetProvenanceAction a => ReduceSetProvenance(state, a),
+            ClearProvenanceAction a => ReduceClearProvenance(state, a),
+            MarkEntityModifiedAction a => ReduceMarkEntityModified(state, a),
+            SetVisualOverrideAction a => ReduceSetVisualOverride(state, a),
+            RemoveVisualOverrideAction a => ReduceRemoveVisualOverride(state, a),
+            SetDiffVisibilityAction a => ReduceSetDiffVisibility(state, a),
+            RemoveDiffVisibilityAction a => ReduceRemoveDiffVisibility(state, a),
             UndoAction => ReduceUndo(state),
             RedoAction => ReduceRedo(state),
             _ => state,
@@ -183,6 +194,92 @@ public static class Reducer
             if (track == null) return null;
             if (a.SegmentIndex < 0 || a.SegmentIndex >= track.Segments.Count) return null;
             track.Segments.RemoveAt(a.SegmentIndex);
+            return doc;
+        });
+
+    // ---- Script sync actions ----
+
+    private static EditorState ReduceRegisterScript(EditorState state, RegisterScriptAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            doc.ScriptSyncManifest ??= new ScriptSyncManifest();
+            doc.ScriptSyncManifest.AddOrUpdateSource(a.Source);
+            return doc;
+        });
+
+    private static EditorState ReduceRemoveScript(EditorState state, RemoveScriptAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            if (doc.ScriptSyncManifest == null) return null;
+            doc.ScriptSyncManifest.RemoveSource(a.ScriptId);
+            if (doc.ScriptSyncManifest.IsEmpty)
+                doc.ScriptSyncManifest = null;
+            return doc;
+        });
+
+    private static EditorState ReduceSetProvenance(EditorState state, SetProvenanceAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            doc.ScriptSyncManifest ??= new ScriptSyncManifest();
+            doc.ScriptSyncManifest.SetProvenance(a.Provenance);
+            return doc;
+        });
+
+    private static EditorState ReduceClearProvenance(EditorState state, ClearProvenanceAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            if (doc.ScriptSyncManifest == null) return null;
+            doc.ScriptSyncManifest.ClearProvenance(a.EntityId);
+            if (doc.ScriptSyncManifest.IsEmpty)
+                doc.ScriptSyncManifest = null;
+            return doc;
+        });
+
+    private static EditorState ReduceMarkEntityModified(EditorState state, MarkEntityModifiedAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            if (doc.ScriptSyncManifest == null) return null;
+            var prov = doc.ScriptSyncManifest.GetProvenanceForEntity(a.EntityId);
+            if (prov == null) return null;
+            prov.SyncState = ScriptSyncState.Modified;
+            return doc;
+        });
+
+    // ---- Visual override actions ----
+
+    private static EditorState ReduceSetVisualOverride(EditorState state, SetVisualOverrideAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            doc.VisualOverrides ??= new VisualOverrideCollection();
+            doc.VisualOverrides.SetOverride(a.Override);
+            return doc;
+        });
+
+    private static EditorState ReduceRemoveVisualOverride(EditorState state, RemoveVisualOverrideAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            if (doc.VisualOverrides == null) return null;
+            doc.VisualOverrides.RemoveOverride(a.OverrideId);
+            if (doc.VisualOverrides.IsEmpty)
+                doc.VisualOverrides = null;
+            return doc;
+        });
+
+    private static EditorState ReduceSetDiffVisibility(EditorState state, SetDiffVisibilityAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            doc.VisualOverrides ??= new VisualOverrideCollection();
+            doc.VisualOverrides.SetDiffVisibility(a.Visibility);
+            return doc;
+        });
+
+    private static EditorState ReduceRemoveDiffVisibility(EditorState state, RemoveDiffVisibilityAction a)
+        => ApplyMutation(state, a.Description, doc =>
+        {
+            if (doc.VisualOverrides == null) return null;
+            doc.VisualOverrides.RemoveDiffVisibility(a.LayerId);
+            if (doc.VisualOverrides.IsEmpty)
+                doc.VisualOverrides = null;
             return doc;
         });
 

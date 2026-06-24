@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\state\VisualCompositor.State.csproj" />
     <ProjectReference Include="..\..\rendering\VisualCompositor.Rendering.csproj" />
     <ProjectReference Include="..\..\ui\VisualCompositor.UI.csproj" />
+    <ProjectReference Include="..\..\audio\VisualCompositor.Audio.csproj" />
   </ItemGroup>
 
 </Project>
