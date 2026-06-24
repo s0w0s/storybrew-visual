@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "VisualCompositor.Audio/1.0.0": {
+        "dependencies": {
+          "VisualCompositor.Core": "1.0.0"
+        },
+        "runtime": {
+          "VisualCompositor.Audio.dll": {}
+        }
+      },
+      "VisualCompositor.Core/1.0.0": {
+        "runtime": {
+          "VisualCompositor.Core.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VisualCompositor.Audio/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VisualCompositor.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

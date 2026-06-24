@@ -1,0 +1,16 @@
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.csproj.AssemblyReference.cache
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.AssemblyInfoInputs.cache
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.AssemblyInfo.cs
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.csproj.CoreCompileInputs.cache
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.sourcelink.json
+/workspace/visualcompositor/osb/bin/Debug/net8.0/VisualCompositor.Osb.deps.json
+/workspace/visualcompositor/osb/bin/Debug/net8.0/VisualCompositor.Osb.dll
+/workspace/visualcompositor/osb/bin/Debug/net8.0/VisualCompositor.Osb.pdb
+/workspace/visualcompositor/osb/bin/Debug/net8.0/VisualCompositor.Core.dll
+/workspace/visualcompositor/osb/bin/Debug/net8.0/VisualCompositor.Core.pdb
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCo.5F73C244.Up2Date
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.dll
+/workspace/visualcompositor/osb/obj/Debug/net8.0/refint/VisualCompositor.Osb.dll
+/workspace/visualcompositor/osb/obj/Debug/net8.0/VisualCompositor.Osb.pdb
+/workspace/visualcompositor/osb/obj/Debug/net8.0/ref/VisualCompositor.Osb.dll

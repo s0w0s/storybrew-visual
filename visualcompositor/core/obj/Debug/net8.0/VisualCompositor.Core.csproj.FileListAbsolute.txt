@@ -1,0 +1,12 @@
+/workspace/visualcompositor/core/bin/Debug/net8.0/VisualCompositor.Core.deps.json
+/workspace/visualcompositor/core/bin/Debug/net8.0/VisualCompositor.Core.dll
+/workspace/visualcompositor/core/bin/Debug/net8.0/VisualCompositor.Core.pdb
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.AssemblyInfoInputs.cache
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.AssemblyInfo.cs
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.csproj.CoreCompileInputs.cache
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.sourcelink.json
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.dll
+/workspace/visualcompositor/core/obj/Debug/net8.0/refint/VisualCompositor.Core.dll
+/workspace/visualcompositor/core/obj/Debug/net8.0/VisualCompositor.Core.pdb
+/workspace/visualcompositor/core/obj/Debug/net8.0/ref/VisualCompositor.Core.dll
