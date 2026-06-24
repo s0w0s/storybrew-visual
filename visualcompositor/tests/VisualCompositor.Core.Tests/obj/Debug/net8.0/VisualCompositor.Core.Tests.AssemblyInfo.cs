@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VisualCompositor.Core.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b864ebab545175ac318d4250320bf0019d38eed7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fb821a9d400edf3451bdb6561fe39e4c1b5aed39")]
 [assembly: System.Reflection.AssemblyProductAttribute("VisualCompositor.Core.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VisualCompositor.Core.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
